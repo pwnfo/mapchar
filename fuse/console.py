@@ -22,7 +22,7 @@ from fuse.utils.formatters import format_size
 # -------------------------------------
 # progress bar configuration constants.
 # -------------------------------------
-_PROGRESS_UPDATE_INTERVAL = 0.15
+_PROGRESS_UPDATE_INTERVAL = 0.10
 
 _THEME = Theme(
     {
