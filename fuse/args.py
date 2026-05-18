@@ -21,7 +21,7 @@ class FuseParser(argparse.ArgumentParser):
 
     def error(self, message: str) -> Never:
         self.print_usage(sys.stderr)
-        log.error("\n" + message)
+        sys.stderr.write("\n" + message + "\n")
         sys.exit(1)
 
 
