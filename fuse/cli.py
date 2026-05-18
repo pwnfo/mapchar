@@ -90,6 +90,7 @@ def generate(
 
     show_progress_bar = (options.filename is not None) and (not options.quiet_mode)
     start_token, end_token = options.wrange
+    stop_event = None
 
     def stop_progress() -> None:
         """Signal progress thread to stop and wait for it."""
@@ -201,9 +202,6 @@ def generate(
                     for token in generator.generate(
                         nodes, start_from=start_from, end=end
                     ):
-                        if stop_event.is_set() or writer_failed.is_set():
-                            return
-
                         if pattern is not None and not pattern.match(token):
                             continue
 
@@ -323,47 +321,52 @@ def generate(
             buf_bytes = 0
             flush_limit = options.flush_limit
 
-            try:
-                start_progress_bar()
+            start_progress_bar()
 
-                with fuse_open(
-                    options.filename,
-                    "a",
-                    encoding="utf-8",
-                    buffering=options.buffering,
-                    compression=options.compression,
-                    compresslevel=options.compresslevel,
-                ) as fp:
-                    if not fp:
-                        stop_progress()
-                        return 1
+            with fuse_open(
+                options.filename,
+                "a",
+                encoding="utf-8",
+                buffering=options.buffering,
+                compression=options.compression,
+                compresslevel=options.compresslevel,
+            ) as fp:
+                if not fp:
+                    stop_progress()
+                    return 1
 
-                    for token in generator.generate(nodes, start_from=start_token):
-                        item = token + options.delimiter
-                        item_l = len(item)
+                for token in generator.generate(nodes, start_from=start_token):
+                    item = token + options.delimiter
+                    item_l = len(item)
 
-                        if pattern is not None and not pattern.match(token):
-                            continue
+                    if pattern is not None and not pattern.match(token):
+                        continue
 
-                        buf.append(item)
-                        buf_bytes += item_l
+                    buf.append(item)
+                    buf_bytes += item_l
 
-                        if buf_bytes >= flush_limit:
-                            progress.value += fp.write("".join(buf))
-                            buf.clear()
-                            buf_bytes = 0
-
-                        if end_token == token:
-                            stop_progress()
-                            break
-
-                    if buf:
+                    if buf_bytes >= flush_limit:
                         progress.value += fp.write("".join(buf))
+                        buf.clear()
+                        buf_bytes = 0
 
-            except KeyboardInterrupt:
-                stop_progress()
-                log.error("Generation stopped with keyboard interrupt!")
-                return 1
+                    if end_token == token:
+                        stop_progress()
+                        break
+
+                if buf:
+                    progress.value += fp.write("".join(buf))
+
+    except KeyboardInterrupt:
+        if stop_event is not None:
+            stop_event.set()
+
+        for child in multiprocessing.active_children():
+            child.terminate()
+
+        stop_progress()
+        log.error("Generation stopped with keyboard interrupt!")
+        return 1
 
     except Exception:
         stop_progress()
