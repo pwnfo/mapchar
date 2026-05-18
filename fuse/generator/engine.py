@@ -328,7 +328,6 @@ class FuseGenerator:
         cur = nodes[idx]
 
         if isinstance(cur, BindDefNode):
-            inner_vals: list[str]
             if cur.min_rep == 1 and cur.max_rep == 1:
                 inner_vals_gen = self._combine_resume(cur.inner_nodes, 0, None, {})
             else:
@@ -338,11 +337,8 @@ class FuseGenerator:
                     base: list[str], mn: int, mx: int
                 ) -> Generator[str, None, None]:
                     for r in range(mn, mx + 1):
-                        if r == 0:
-                            yield ""
-                        else:
-                            for combo in product(base, repeat=r):
-                                yield "".join(combo)
+                        for val in base:
+                            yield val * r if r > 0 else ""
 
                 inner_vals_gen = _rep_gen(base_vals, cur.min_rep, cur.max_rep)
             for val in inner_vals_gen:
@@ -569,16 +565,23 @@ class FuseGenerator:
         for node in nodes:
             if isinstance(node, BindDefNode):
                 inner_bytes, inner_count = self.stats(node.inner_nodes, delimiter_len=0)
-                node_count = inner_count
-                node_bytes = inner_bytes
-                avg_len = inner_bytes // inner_count if inner_count > 0 else 0
-                binding_stats[node.name] = (inner_count, avg_len)
+                node_count = 0
+                node_bytes = 0
+                min_r, max_r = node.min_rep, node.max_rep
+
+                for r in range(min_r, max_r + 1):
+                    node_count += inner_count
+                    node_bytes += r * inner_bytes
+
+                avg_len = node_bytes // node_count if node_count > 0 else 0
+                binding_stats[node.name] = (node_count, avg_len)
             elif isinstance(node, BindRefNode):
                 if node.name not in binding_stats:
                     raise ExprError(f"undefined variable {node.name!r}")
                 _, avg_len = binding_stats[node.name]
-                node_count = 1
-                node_bytes = avg_len
+                min_r, max_r = node.min_rep, node.max_rep
+                node_count = max_r - min_r + 1
+                node_bytes = sum(r * avg_len for r in range(min_r, max_r + 1))
             elif isinstance(node, FileNode):
                 k, sum_len = node.stats_info()
                 node_count = 0
