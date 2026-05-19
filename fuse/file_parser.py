@@ -32,7 +32,11 @@ def process_expr_file(
     for i, line in enumerate(lines):
         # expand defines
         for def_key, def_val in defines:
-            line = re.sub(r"(?<!\\)\$" + re.escape(def_key) + ";", def_val, line)
+            line = re.sub(
+                r"(?<!\\)\$" + re.escape(def_key) + ";",
+                def_val.replace("\\", r"\\"),
+                line,
+            )
 
         fields = line.split(" ")
         keyword = fields[0]
@@ -60,11 +64,19 @@ def process_expr_file(
 
             # gets inclusions relative to the expression file
             # if the path starts with "./" or "../".
-            if arguments[0].startswith("./") or arguments[0].startswith("../"):
+            arg_str = " ".join(arguments).strip()
+            if (
+                len(arg_str) >= 2
+                and arg_str[0] == arg_str[-1]
+                and arg_str[0] in ('"', "'")
+            ):
+                arg_str = arg_str[1:-1]
+
+            if arg_str.startswith("./") or arg_str.startswith("../"):
                 base_dir = Path(filepath).resolve().parent
-                file = str((base_dir / " ".join(arguments).strip()).resolve())
+                file = str((base_dir / arg_str).resolve())
             else:
-                file = " ".join(arguments).strip()
+                file = arg_str
 
             current_files.append(file)
             continue

@@ -36,7 +36,7 @@ def create_parser(prog: str = "fuse") -> FuseParser:
     parser = FuseParser(
         prog=prog,
         add_help=False,
-        usage=f"{prog} [options] <expression> [<files...>]",
+        usage=f"{prog} [options] <pattern> [<files...>]",
         description=__description__,
         epilog=epilog,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -78,7 +78,7 @@ def create_parser(prog: str = "fuse") -> FuseParser:
         "--file",
         metavar="<path>",
         dest="expr_file",
-        help="load expressions from file",
+        help="load patterns from file",
     )
     input_group.add_argument(
         "-S",
@@ -161,7 +161,7 @@ def create_parser(prog: str = "fuse") -> FuseParser:
     )
 
     # positional arguments
-    parser.add_argument("expression", nargs="?", help=argparse.SUPPRESS)
+    parser.add_argument("pattern", nargs="?", help=argparse.SUPPRESS)
     parser.add_argument("files", nargs="*", help=argparse.SUPPRESS)
 
     return parser

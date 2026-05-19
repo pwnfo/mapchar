@@ -11,7 +11,7 @@ from datetime import datetime
 from logging import ERROR
 from typing import Any
 from time import perf_counter
-from fuse import __version__, BANNER
+from fuse import BANNER
 
 from fuse.logger import log
 from fuse.args import create_parser
@@ -153,11 +153,14 @@ def generate(
                             pass
 
                         while True:
-                            data = queue.get()
-                            if data is None:
+                            msg = queue.get()
+                            if msg is None:
                                 break
 
-                            progress.value += fp.write(data)
+                            data, processed = msg
+                            if data:
+                                fp.write(data)
+                            progress.value += processed
 
                 except Exception as e:
                     stop_event.set()
@@ -176,8 +179,8 @@ def generate(
             def worker_process(
                 generator: FuseGenerator,
                 nodes: list[Node],
-                start_from: str | None,
-                end: str | None,
+                start_token: str | None,
+                end_token: str | None,
                 queue: Any,
                 delimiter: str,
                 pattern: re.Pattern[str] | None,
@@ -186,13 +189,13 @@ def generate(
             ) -> None:
                 """Worker process for word generation."""
                 buf: list[str] = []
-                buf_bytes: int = 0
+                buf_processed: int = 0
                 flush_limit = options.flush_limit
 
-                def safe_put(item: str) -> bool:
+                def safe_put(msg: tuple[str, int]) -> bool:
                     while not stop_event.is_set() and not writer_failed.is_set():
                         try:
-                            queue.put(item, timeout=0.5)
+                            queue.put(msg, timeout=0.5)
                             return True
                         except Exception:
                             continue
@@ -200,23 +203,30 @@ def generate(
 
                 try:
                     for token in generator.generate(
-                        nodes, start_from=start_from, end=end
+                        nodes, start_token=start_token, end_token=end_token
                     ):
+                        item = token + delimiter
+                        item_b = len(item.encode("utf-8"))
+
                         if pattern is not None and not pattern.match(token):
+                            buf_processed += item_b
+                            if buf_processed >= flush_limit:
+                                if not safe_put(("", buf_processed)):
+                                    return
+                                buf_processed = 0
                             continue
 
-                        item = token + delimiter
                         buf.append(item)
-                        buf_bytes += len(item)
+                        buf_processed += item_b
 
-                        if buf_bytes >= flush_limit:
-                            if not safe_put("".join(buf)):
+                        if buf_processed >= flush_limit:
+                            if not safe_put(("".join(buf), buf_processed)):
                                 return
                             buf.clear()
-                            buf_bytes = 0
+                            buf_processed = 0
 
-                    if buf:
-                        safe_put("".join(buf))
+                    if buf_processed > 0:
+                        safe_put(("".join(buf), buf_processed))
 
                 except Exception as e:
                     log.error(f"worker error: {e}")
@@ -318,7 +328,7 @@ def generate(
 
         else:
             buf = []
-            buf_bytes = 0
+            buf_processed = 0
             flush_limit = options.flush_limit
 
             start_progress_bar()
@@ -335,23 +345,32 @@ def generate(
                     stop_progress()
                     return 1
 
-                for token in generator.generate(nodes, start_from=start_token, end=end_token):
+                for token in generator.generate(
+                    nodes, start_token=start_token, end_token=end_token
+                ):
                     item = token + options.delimiter
-                    item_l = len(item)
+                    item_b = len(item.encode("utf-8"))
 
                     if pattern is not None and not pattern.match(token):
+                        buf_processed += item_b
+                        if buf_processed >= flush_limit:
+                            progress.value += buf_processed
+                            buf_processed = 0
                         continue
 
                     buf.append(item)
-                    buf_bytes += item_l
+                    buf_processed += item_b
 
-                    if buf_bytes >= flush_limit:
-                        progress.value += fp.write("".join(buf))
+                    if buf_processed >= flush_limit:
+                        fp.write("".join(buf))
+                        progress.value += buf_processed
                         buf.clear()
-                        buf_bytes = 0
+                        buf_processed = 0
 
-                if buf:
-                    progress.value += fp.write("".join(buf))
+                if buf_processed > 0:
+                    if buf:
+                        fp.write("".join(buf))
+                    progress.value += buf_processed
 
     except KeyboardInterrupt:
         if stop_event is not None:
@@ -457,7 +476,7 @@ def main() -> int:
     parser = create_parser()
     args = parser.parse_args()
 
-    if args.expression is None and args.expr_file is None:
+    if args.pattern is None and args.expr_file is None:
         parser.print_help(sys.stderr)
         return 1
 
@@ -559,7 +578,7 @@ def main() -> int:
 
         return 0
 
-    expression, proc_files = format_expression(args.expression, args.files)
+    expression, proc_files = format_expression(args.pattern, args.files)
 
     try:
         try:
@@ -570,8 +589,8 @@ def main() -> int:
             s_bytes, s_words = generator.stats(
                 nodes,
                 delimiter_len=len(args.delimiter),
-                start_from=args.start,
-                end=args.end,
+                start_token=args.start,
+                end_token=args.end,
             )
         except ExprError as e:
             log.error(e)

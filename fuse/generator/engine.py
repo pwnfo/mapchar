@@ -314,7 +314,7 @@ class FuseGenerator:
         self,
         nodes: list,
         idx: int,
-        start_from: str | None,
+        start_token: str | None,
         bindings: dict[str, str] | None = None,
     ) -> Generator[str, None, None]:
         """recursive word combination generator with resume logic and binding support."""
@@ -322,7 +322,7 @@ class FuseGenerator:
             bindings = {}
         ln = len(nodes)
         if idx >= ln:
-            if not start_from:
+            if not start_token:
                 yield ""
             return
         cur = nodes[idx]
@@ -353,11 +353,11 @@ class FuseGenerator:
             val_base = bindings[cur.name]
             for r in range(cur.min_rep, cur.max_rep + 1):
                 val = val_base * r if r > 0 else ""
-                if start_from is None:
+                if start_token is None:
                     next_target = None
-                elif start_from.startswith(val):
-                    next_target = start_from[len(val) :]
-                elif val.startswith(start_from):
+                elif start_token.startswith(val):
+                    next_target = start_token[len(val) :]
+                elif val.startswith(start_token):
                     next_target = None
                 else:
                     continue
@@ -367,13 +367,13 @@ class FuseGenerator:
                     yield val + suffix
             return
 
-        if start_from is None:
+        if start_token is None:
             for part in cur.expand():
                 for suffix in self._combine_resume(nodes, idx + 1, None, bindings):
                     yield part + suffix
             return
 
-        for part, remainder, is_full_mode in cur.expand_resume(start_from):
+        for part, remainder, is_full_mode in cur.expand_resume(start_token):
             next_target = None if is_full_mode else remainder
             for suffix in self._combine_resume(nodes, idx + 1, next_target, bindings):
                 yield part + suffix
@@ -381,23 +381,23 @@ class FuseGenerator:
     def generate(
         self,
         nodes: list[Node | FileNode],
-        start_from: str | None = None,
-        end: str | None = None,
+        start_token: str | None = None,
+        end_token: str | None = None,
     ) -> Generator[str, None, None]:
-        """starts the wordlist generation, optionally bounded by start_from and end."""
-        iterator = self._combine_resume(nodes, 0, start_from)
-        found = False if start_from else True
+        """starts the wordlist generation, optionally bounded by start_token and end_token."""
+        iterator = self._combine_resume(nodes, 0, start_token)
+        found = False if start_token else True
 
         for item in iterator:
             if not found:
-                if start_from is not None and item >= start_from:
+                if start_token is not None and item >= start_token:
                     found = True
                 else:
                     continue
 
             yield item
 
-            if end and item == end:
+            if end_token and item == end_token:
                 break
 
     def _get_suffix_capacity(self, nodes: list[Node | FileNode], start_idx: int) -> int:
@@ -549,11 +549,11 @@ class FuseGenerator:
         self,
         nodes: list,
         delimiter_len: int = 1,
-        start_from: str | None = None,
-        end: str | None = None,
+        start_token: str | None = None,
+        end_token: str | None = None,
         binding_stats: dict[str, tuple[int, int]] | None = None,
     ) -> tuple[int, int]:
-        """calculates wordlist stats, adjusted for start_from and end range."""
+        """calculates wordlist stats, adjusted for start_token and end_token range."""
         total_count = 1
         total_bytes = 0
         if binding_stats is None:
@@ -629,21 +629,21 @@ class FuseGenerator:
         full_total_bytes = int(total_bytes + (delimiter_len * total_count))
         full_total_count = int(total_count)
 
-        if not start_from and not end:
+        if not start_token and not end_token:
             return full_total_bytes, full_total_count
 
         start_count = 0
         start_bytes = 0
-        if start_from:
-            start_count, start_bytes = self._calculate_skipped_stats(nodes, start_from)
+        if start_token:
+            start_count, start_bytes = self._calculate_skipped_stats(nodes, start_token)
             start_bytes += start_count * delimiter_len
 
         end_count = full_total_count
         end_bytes = full_total_bytes
-        if end:
-            sk_count, sk_bytes = self._calculate_skipped_stats(nodes, end)
+        if end_token:
+            sk_count, sk_bytes = self._calculate_skipped_stats(nodes, end_token)
             end_count = sk_count + 1
-            end_word_size = len(end.encode("utf-8"))
+            end_word_size = len(end_token.encode("utf-8"))
             end_bytes = (
                 sk_bytes + (sk_count * delimiter_len) + end_word_size + delimiter_len
             )

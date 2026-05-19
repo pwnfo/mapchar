@@ -7,13 +7,13 @@ class TestCreateParser:
     def setup_method(self):
         self.parser = create_parser()
 
-    def test_expression_parsed(self):
+    def test_pattern_parsed(self):
         args = self.parser.parse_args(["[abc]"])
-        assert args.expression == "[abc]"
+        assert args.pattern == "[abc]"
 
-    def test_no_expression_defaults_none(self):
+    def test_no_pattern_defaults_none(self):
         args = self.parser.parse_args([])
-        assert args.expression is None
+        assert args.pattern is None
 
     def test_output_option(self):
         args = self.parser.parse_args(["-o", "out.txt", "[ab]"])

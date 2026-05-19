@@ -379,15 +379,15 @@ class TestGenerate:
         assert result == list("0123456789")
 
     def test_start_from(self):
-        result = self._gen("[abc][12]", start_from="b1")
+        result = self._gen("[abc][12]", start_token="b1")
         assert result == ["b1", "b2", "c1", "c2"]
 
     def test_end(self):
-        result = self._gen("[abc][12]", end="b1")
+        result = self._gen("[abc][12]", end_token="b1")
         assert result == ["a1", "a2", "b1"]
 
     def test_start_from_and_end(self):
-        result = self._gen("[abc][12]", start_from="a2", end="b2")
+        result = self._gen("[abc][12]", start_token="a2", end_token="b2")
         assert result == ["a2", "b1", "b2"]
 
     def test_complex_mixed(self):
@@ -434,11 +434,11 @@ class TestStats:
         assert b2 > b1
 
     def test_stats_with_start_from(self):
-        _, total_words = self._stats("[abc][12]", start_from="b1")
+        _, total_words = self._stats("[abc][12]", start_token="b1")
         assert total_words == 4  # b1, b2, c1, c2
 
     def test_stats_with_end(self):
-        _, total_words = self._stats("[abc][12]", end="b1")
+        _, total_words = self._stats("[abc][12]", end_token="b1")
         assert total_words == 3  # a1, a2, b1
 
     def test_file_stats(self, wordlist_file):
