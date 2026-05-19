@@ -335,7 +335,7 @@ def generate(
                     stop_progress()
                     return 1
 
-                for token in generator.generate(nodes, start_from=start_token):
+                for token in generator.generate(nodes, start_from=start_token, end=end_token):
                     item = token + options.delimiter
                     item_l = len(item)
 
@@ -349,10 +349,6 @@ def generate(
                         progress.value += fp.write("".join(buf))
                         buf.clear()
                         buf_bytes = 0
-
-                    if end_token == token:
-                        stop_progress()
-                        break
 
                 if buf:
                     progress.value += fp.write("".join(buf))
