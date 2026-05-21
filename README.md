@@ -33,12 +33,12 @@
 
 To generate a wordlist from a simple expression:
 ```bash
-fuse "/l{2,4}"
+fuse '/l{2,4}'
 ```
 
 To combine files with generators:
 ```bash
-fuse "^:^" names.txt pass.txt
+fuse '^:^' names.txt pass.txt
 ```
 
 Outputs can be manipulated, filtered, and saved.
@@ -85,7 +85,7 @@ Output Options:
 
 Example:
 ```bash
-$ fuse "/l{2,3}"
+$ fuse '/l{2,3}'
 # output: aa, ab, ac, ..., ZY, ZZ
 ```
 
@@ -121,10 +121,10 @@ Example: `/l/l` generates all two-letter combinations (upper and lower case).
 
 Examples:
 ```bash
-$ fuse "[XYZ]{3}"         # XXX, XXY, ..., ZZZ
-$ fuse "[XYZ]{2,5}"       # XY, XZ, ..., XYZXY
-$ fuse "Ryan?/d"          # Rya0, Rya1, ..., Ryan9
-$ fuse "[XYZ]?Ryan"       # Ryan, XRyan, YRyan, ZRyan
+$ fuse '[XYZ]{3}'         # XXX, XXY, ..., ZZZ
+$ fuse '[XYZ]{2,5}'       # XY, XZ, ..., XYZXY
+$ fuse 'Ryan?/d'          # Rya0, Rya1, ..., Ryan9
+$ fuse '[XYZ]?Ryan'       # Ryan, XRyan, YRyan, ZRyan
 ```
 
 ### Numeric ranges
@@ -139,10 +139,10 @@ These numeric ranges can be used in any position of an expression.
 
 Use `^` in an expression as a placeholder for the next file argument. Each `^` consumes one file and iterates over its lines:
 ```bash
-$ fuse "^/d" names.txt
+$ fuse '^/d' names.txt
 # output: Bob0, Bob1, ..., Ana0, Ana1, ...
 
-$ fuse "^-^" names.txt years.txt
+$ fuse '^-^' names.txt years.txt
 # output: Bob-1990, Ana-1991, Ryan-1992, ...
 ```
 
@@ -170,20 +170,20 @@ Fuse supports on-the-fly compression when writing output files.
 
 ```bash
 # gzip (fast, balanced)
-fuse "/l{5}" -z gzip -o wordlist.txt.gz
+fuse '/l{5}' -z gzip -o wordlist.txt.gz
 
 # lzma (best compression)
-fuse "/l{5}" -z lzma -o wordlist.txt.xz
+fuse '/l{5}' -z lzma -o wordlist.txt.xz
 
 # bzip2 (middle ground)
-fuse "/l{5}" -z bzip2 -o wordlist.txt.bz2
+fuse '/l{5}' -z bzip2 -o wordlist.txt.bz2
 ```
 
 ### Escaping special characters
 
 Use `\` to escape special characters.
 ```bash
-$ fuse "\/d/d"
+$ fuse '\/d/d'
 # output: /d/0, /d/1, ..., /d/9
 ```
 
