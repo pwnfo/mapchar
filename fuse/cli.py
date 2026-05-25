@@ -513,6 +513,8 @@ def main() -> int:
     if isinstance(buffer_size, str):
         try:
             buffer_size = parse_size(buffer_size)
+            if buffer_size < 1:
+                raise ValueError("unbuffered mode is not supported.")
         except ValueError as e:
             log.error(f"invalid buffer size: {e}")
             return 1
