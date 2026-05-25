@@ -262,9 +262,8 @@ class TestParse:
     def test_literal_nodes(self):
         tokens = self.gen.tokenize("abc")
         nodes = self.gen.parse(tokens)
-        assert len(nodes) == 3
-        for n in nodes:
-            assert isinstance(n, Node)
+        assert len(nodes) == 1
+        assert nodes[0].base == ["abc"]
 
     def test_class_node(self):
         tokens = self.gen.tokenize("[ab]")

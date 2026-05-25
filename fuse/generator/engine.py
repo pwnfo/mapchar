@@ -259,7 +259,20 @@ class FuseGenerator:
                 elif next_k == "BRACES":
                     min_rep, max_rep = next_v
                     i += 1
-            if kind == "LIT" or kind == "CLASS" or kind == "RANGE":
+            if kind == "LIT":
+                if (
+                    nodes
+                    and isinstance(nodes[-1], Node)
+                    and nodes[-1].min_rep == 1
+                    and nodes[-1].max_rep == 1
+                    and len(nodes[-1].base) == 1
+                    and min_rep == 1
+                    and max_rep == 1
+                ):
+                    nodes[-1].base[0] += val
+                else:
+                    nodes.append(Node(val, min_rep, max_rep))
+            elif kind == "CLASS" or kind == "RANGE":
                 nodes.append(Node(val, min_rep, max_rep))
             elif kind == "FILE":
                 if file_idx >= len(file_groups):
