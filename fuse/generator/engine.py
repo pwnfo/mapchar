@@ -112,8 +112,24 @@ class FuseGenerator:
             )
         if literal_mode:
             return [inner], end_pos + 1
-        if "|" not in inner and "\\" not in inner:
-            return list(inner), end_pos + 1
+        if "|" not in inner:
+            choices: list[str] = []
+            buf: list[str] = []
+            escape = False
+            for ch in inner:
+                if escape:
+                    choices.append(ch)
+                    escape = False
+                elif ch == "\\":
+                    escape = True
+                else:
+                    choices.append(ch)
+            if not choices:
+                raise ExprError(
+                    "invalid character class contents", error_pos=(pattern, start_idx)
+                )
+            return choices, end_pos + 1
+
         segments: list[str] = []
         buf: list[str] = []
         escape = False
