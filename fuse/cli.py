@@ -476,6 +476,8 @@ def main() -> int:
     parser = create_parser()
     args = parser.parse_args()
 
+    sys.setrecursionlimit(4000)
+
     if args.pattern is None and args.expr_file is None:
         parser.print_help(sys.stderr)
         return 1
