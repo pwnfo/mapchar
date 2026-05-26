@@ -240,15 +240,14 @@ class Node:
 
                 if rec_rem is not None:
                     return skipped_c + rec_c, skipped_b + rec_b, rec_rem
-                else:
-                    skipped_c += pool_len ** (depth - 1)
-                    branch_b = (
-                        (depth - 1) * (pool_len ** (max(0, depth - 2))) * sum_len
-                    ) + ((pool_len ** (depth - 1)) * (prefix_len + item_b))
-                    skipped_b += branch_b
 
-            elif item.startswith(target):
-                return skipped_c, skipped_b, ""
+                skipped_c += pool_len ** (depth - 1)
+
+                branch_b = (
+                    (depth - 1) * (pool_len ** (max(0, depth - 2))) * sum_len
+                ) + ((pool_len ** (depth - 1)) * (prefix_len + item_b))
+
+                skipped_b += branch_b
 
             else:
                 skipped_c += pool_len ** (depth - 1)
