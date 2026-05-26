@@ -114,7 +114,6 @@ class FuseGenerator:
             return [inner], end_pos + 1
         if "|" not in inner:
             choices: list[str] = []
-            buf: list[str] = []
             escape = False
             for ch in inner:
                 if escape:
