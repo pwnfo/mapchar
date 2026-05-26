@@ -313,7 +313,7 @@ class FileNode(Node):
                         raise IOError
                     out.extend(ln.rstrip("\n\r") for ln in fp)
             except (IOError, OSError):
-                raise ExprError(f"failed to open or read file {path!r}")
+                raise ExprError(f"failed to open or read file")
         if not out:
             raise ExprError(f"no lines produced from files {self.base!r}")
         self._cached_lines = out
