@@ -41,7 +41,7 @@ class GenerateOptions:
     wrange: tuple[str | None, str | None]
     threads: int
     flush_limit: int
-    compresslevel: int
+    compresslevel: int | None
     compression: CompressionFormat | None = None
 
 

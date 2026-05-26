@@ -63,10 +63,6 @@ class TestCreateParser:
         args = self.parser.parse_args(["[ab]"])
         assert args.workers == 1
 
-    def test_filter_option(self):
-        args = self.parser.parse_args(["-F", "^a", "[ab]"])
-        assert args.filter == "^a"
-
     def test_compresslevel_option(self):
         args = self.parser.parse_args(["-l", "5", "[ab]"])
         assert args.compresslevel == 5

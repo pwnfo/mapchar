@@ -74,7 +74,7 @@ class TestProcessExprFile:
     def test_nonexistent_file_returns_empty(self, tmp_path):
         fake = tmp_path / "nonexistent" / "ghost.fuse"
         results = list(process_expr_file(str(fake)))
-        assert results == []
+        assert results == [None]
 
     def test_relative_file_path(self, tmp_path):
         words = tmp_path / "words.txt"

@@ -48,7 +48,6 @@ class TestGenerateOptions:
             quiet_mode=False,
             delimiter="\n",
             wrange=(None, None),
-            filter=None,
             threads=1,
             flush_limit=512 * 1024,
             compresslevel=None,
@@ -58,7 +57,6 @@ class TestGenerateOptions:
         assert opts.quiet_mode is False
         assert opts.delimiter == "\n"
         assert opts.wrange == (None, None)
-        assert opts.filter is None
         assert opts.threads == 1
         assert opts.flush_limit == 512 * 1024
         assert opts.compresslevel == None
@@ -70,7 +68,6 @@ class TestGenerateOptions:
             quiet_mode=True,
             delimiter=",",
             wrange=("a", "z"),
-            filter="^[a-z]+$",
             threads=4,
             flush_limit=256 * 1024,
             compresslevel=5,
@@ -80,7 +77,6 @@ class TestGenerateOptions:
         assert opts.quiet_mode is True
         assert opts.delimiter == ","
         assert opts.wrange == ("a", "z")
-        assert opts.filter == "^[a-z]+$"
         assert opts.threads == 4
         assert opts.flush_limit == 256 * 1024
         assert opts.compresslevel == 5
