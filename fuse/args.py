@@ -9,9 +9,8 @@ from typing import Never
 CLI_EXAMPLES = """
 Examples:
   fuse '/A{4}'
-  fuse '/l{4}#[0-8:2]' -o words.txt
+  fuse '/l{4}#[0-8:2]' -w 2 -o words.txt
   fuse -f patterns.fuse
-  fuse '/h{6}' -F '.{4}ff' -w 3 -n
   fuse '/H{6}' -z gzip -k 1MB -l 7 -o hashes.txt.gz
 """
 
@@ -119,13 +118,6 @@ def create_parser(prog: str = "fuse") -> FuseParser:
         type=int,
         default=1,
         help="number of worker processes (default: 1)",
-    )
-    generation_group.add_argument(
-        "-F",
-        "--filter",
-        metavar="<regex>",
-        dest="filter",
-        help="filter generated words with a regular expression",
     )
     generation_group.add_argument(
         "-k",

@@ -39,7 +39,6 @@ class GenerateOptions:
     quiet_mode: bool
     delimiter: str
     wrange: tuple[str | None, str | None]
-    filter: str | None
     threads: int
     flush_limit: int
     compresslevel: int
@@ -63,19 +62,9 @@ def generate(
     Returns:
         int: status code for CLI exit
     """
-    pattern = None
     start_time = None
     progress = multiprocessing.Value(ctypes.c_longlong, 0)
     total_bytes, total_words = stats
-
-    if options.filter is not None:
-        try:
-            pattern = re.compile(options.filter)
-        except re.PatternError as err:
-            log.error(f"invalid filter: {err}.")
-            return 1
-
-        log.warning("Filtering can discard words and reduce performance.")
 
     if options.threads > 1:
         log.warning("Using multiple workers may result in interleaved output.")
@@ -183,7 +172,6 @@ def generate(
                 end_token: str | None,
                 queue: Any,
                 delimiter: str,
-                pattern: re.Pattern[str] | None,
                 stop_event: Event,
                 writer_failed: Event,
             ) -> None:
@@ -207,14 +195,6 @@ def generate(
                     ):
                         item = token + delimiter
                         item_b = len(item.encode("utf-8"))
-
-                        if pattern is not None and not pattern.match(token):
-                            buf_processed += item_b
-                            if buf_processed >= flush_limit:
-                                if not safe_put(("", buf_processed)):
-                                    return
-                                buf_processed = 0
-                            continue
 
                         buf.append(item)
                         buf_processed += item_b
@@ -307,7 +287,6 @@ def generate(
                         w_end,
                         queue,
                         options.delimiter,
-                        pattern,
                         stop_event,
                         writer_failed,
                     ),
@@ -351,13 +330,6 @@ def generate(
                     item = token + options.delimiter
                     item_b = len(item.encode("utf-8"))
 
-                    if pattern is not None and not pattern.match(token):
-                        buf_processed += item_b
-                        if buf_processed >= flush_limit:
-                            progress.value += buf_processed
-                            buf_processed = 0
-                        continue
-
                     buf.append(item)
                     buf_processed += item_b
 
@@ -392,9 +364,11 @@ def generate(
     if start_time is not None:
         elapsed = perf_counter() - start_time
         speed = int(total_words / elapsed) if elapsed > 0 else 0
+
         if not options.delimiter.endswith("\n") and options.filename is None:
             sys.stdout.write("\n")
             sys.stdout.flush()
+
         log.info(
             f"[bold]Finished in [magenta]{format_time(elapsed)}[/magenta] ({speed} W/s).[/]"
         )
@@ -538,7 +512,6 @@ def main() -> int:
         quiet_mode=args.quiet,
         delimiter=args.delimiter,
         wrange=(args.start, args.end),
-        filter=args.filter,
         threads=args.workers,
         compression=args.compress,
         flush_limit=flush_limit,

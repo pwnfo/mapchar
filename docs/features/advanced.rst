@@ -61,17 +61,6 @@ Fuse intelligently delegates disjoint segments of the permutation space to each 
    $ fuse '[/l/d]{5}' -w 3 -o output.txt
 
 
-Regex Output Filtering
-----------------------
-Do you want to impose restrictions on expressions like "Strings must start with ``3`` or ``5``"?
-Generate the superset pattern and then redirect or filter it using ``-F "REGEX"``.
-
-.. code-block:: bash
-   
-   $ fuse '[/l/d]{3}' -F '^(3|5)'
-
-*Warning: Filtering evaluates dynamically, meaning permutations discarded incur minor performance penalties due to skipped outputs.*
-
 Value Bindings
 --------------
 Value bindings let you evaluate an expression **once per output line** and reuse the result any number of times within that line.

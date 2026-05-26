@@ -28,8 +28,7 @@ Options
 * ``-k <bytes>, --flush-threshold <bytes>``: Sets byte threshold before flushing output buffer. Default is 512KB.
 * ``-z <format>, --compress <format>``: Compress output using specified format. Available: ``gzip``, ``bzip2``, ``lzma``.
 
-**Filtration & Range**
+**Range**
 
-* ``-F <regex>, --filter <regex>``: Pre-evaluates tokens using standard Python regex before outputting.
-* ``-S <word>, --start <word>``: Starts writing specifically from ``<word>`` forward.
+* ``-S <word>, --start <word>``: Starts writing specifically from ``<word>``.
 * ``-E <word>, --end <word>``: Stops execution, ending precisely on ``<word>``.
