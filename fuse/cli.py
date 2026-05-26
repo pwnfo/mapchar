@@ -544,7 +544,7 @@ def main() -> int:
                     nodes = generator.parse(tokens, files=(expr_files or None))
                     # calculates statistics for the `generate` call
                     s_bytes, s_words = generator.stats(
-                        nodes, delimiter_len=len(args.delimiter)
+                        nodes, delimiter_len=len(args.delimiter.encode('utf-8'))
                     )
                 except ExprError as e:
                     log.error(e)
@@ -573,7 +573,7 @@ def main() -> int:
             # to be generated
             s_bytes, s_words = generator.stats(
                 nodes,
-                delimiter_len=len(args.delimiter),
+                delimiter_len=len(args.delimiter.encode('utf-8')),
                 start_token=args.start,
                 end_token=args.end,
             )
