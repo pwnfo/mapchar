@@ -15,13 +15,14 @@ class InvalidSyntaxError(Exception):
 
 def process_expr_file(
     filepath: str,
-) -> Iterator[tuple[str, list[str]]]:
+) -> Iterator[tuple[str, list[str]] | None]:
     """
     Yields the lines of the expression file (`filepath`) to be processed
     with included files. Handles keywords (`%define` and `%include`).
     """
     with fuse_open(filepath, "r", encoding="utf-8") as fp:
         if fp is None:
+            yield None
             return
 
         lines = [line.strip() for line in fp if line.strip()]
@@ -29,7 +30,12 @@ def process_expr_file(
     defines: list[tuple[str, str]] = []
     current_files: list[str] = []
 
-    for i, line in enumerate(lines):
+    for line in lines:
+        if line.startswith("# "):
+            continue
+
+        line = line.split(" # ", 1)[0].rstrip()
+
         # expand defines
         for def_key, def_val in defines:
             line = re.sub(
@@ -41,10 +47,6 @@ def process_expr_file(
         fields = line.split(" ")
         keyword = fields[0]
         arguments = fields[1:]
-
-        # comment
-        if keyword == "#":
-            continue
 
         # ´define´ definition
         if keyword == r"%define":

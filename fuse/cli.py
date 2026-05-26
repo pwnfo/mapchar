@@ -533,7 +533,12 @@ def main() -> int:
         log.setLevel(ERROR)
 
         try:
-            for expression, expr_files in process_expr_file(args.expr_file):
+            for d in process_expr_file(args.expr_file):
+                if d is None:
+                    return 1
+
+                expression, expr_files = d
+
                 try:
                     tokens = generator.tokenize(expression)
                     nodes = generator.parse(tokens, files=(expr_files or None))
