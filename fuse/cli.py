@@ -392,6 +392,9 @@ def generate(
     if start_time is not None:
         elapsed = perf_counter() - start_time
         speed = int(total_words / elapsed) if elapsed > 0 else 0
+        if not options.delimiter.endswith("\n") and options.filename is None:
+            sys.stdout.write("\n")
+            sys.stdout.flush()
         log.info(
             f"[bold]Finished in [magenta]{format_time(elapsed)}[/magenta] ({speed} W/s).[/]"
         )
