@@ -277,7 +277,7 @@ class FuseGenerator:
             if kind == "LIT":
                 if (
                     nodes
-                    and isinstance(nodes[-1], Node)
+                    and type(nodes[-1]) is Node
                     and nodes[-1].min_rep == 1
                     and nodes[-1].max_rep == 1
                     and len(nodes[-1].base) == 1
