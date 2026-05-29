@@ -19,11 +19,12 @@ from fuse.console import get_progress
 from fuse.utils.files import fuse_open
 from fuse.utils.formatters import format_size, format_time, parse_size
 from fuse.generator import ExprError, Node, FuseGenerator
-from fuse.file_parser import InvalidSyntaxError, process_expr_file
+from fuse.file_parser import process_expr_file
 from fuse.compression import (
     CompressionFormat,
     COMPRESSION_LEVEL_RANGES,
 )
+from fuse.exceptions import InvalidSyntaxError
 from multiprocessing.synchronize import Event
 from multiprocessing.sharedctypes import Synchronized
 from multiprocessing.queues import Queue

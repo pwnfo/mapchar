@@ -4,14 +4,7 @@ from pathlib import Path
 from typing import Iterator
 
 from fuse.utils.files import fuse_open
-
-
-class InvalidSyntaxError(Exception):
-    """Raised on invalid fuse file syntax."""
-
-    def __init__(self, message: str) -> None:
-        super().__init__("invalid file: " + message)
-
+from fuse.exceptions import InvalidSyntaxError
 
 def process_expr_file(
     filepath: str,
