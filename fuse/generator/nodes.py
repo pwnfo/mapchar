@@ -1,7 +1,8 @@
+from collections.abc import Generator
 from itertools import product
-from typing import Generator
-from fuse.utils.files import fuse_open
+
 from fuse.generator.exceptions import ExprError
+from fuse.utils.files import fuse_open
 
 
 class BindDefNode:
@@ -89,7 +90,7 @@ class Node:
         self._cached_cardinality = count
         return count
 
-    def expand(self) -> Generator[str, None, None]:
+    def expand(self) -> Generator[str]:
         """standard generation using itertools."""
         min_r = self.min_rep
         max_r = self.max_rep
@@ -105,9 +106,7 @@ class Node:
                 for tup in product(base, repeat=k):
                     yield join(tup)
 
-    def expand_resume(
-        self, start_from: str
-    ) -> Generator[tuple[str, str | None, bool], None, None]:
+    def expand_resume(self, start_from: str) -> Generator[tuple[str, str | None, bool]]:
         """generates items starting from 'start_from' using seeking logic."""
         min_r = self.min_rep
         max_r = self.max_rep
@@ -132,7 +131,7 @@ class Node:
         target: str,
         current_prefix: str = "",
         seeking: bool = True,
-    ) -> Generator[tuple[str, str | None, bool], None, None]:
+    ) -> Generator[tuple[str, str | None, bool]]:
         """recursive helper for resume generation (seeking/draining)."""
         if depth == 0:
             if seeking:
@@ -309,10 +308,10 @@ class FileNode(Node):
             try:
                 with fuse_open(path, "r", encoding="utf-8", errors="ignore") as fp:
                     if not fp:
-                        raise IOError
+                        raise OSError
                     out.extend(ln.rstrip("\n\r") for ln in fp)
-            except (IOError, OSError):
-                raise ExprError(f"failed to open or read file")
+            except OSError:
+                raise ExprError("failed to open or read file") from None
         if not out:
             raise ExprError(f"no lines produced from files {self.base!r}")
         self._cached_lines = out
@@ -333,7 +332,7 @@ class FileNode(Node):
         self._cached_cardinality = count
         return count
 
-    def expand(self) -> Generator[str, None, None]:
+    def expand(self) -> Generator[str]:
         """standard file-based generation."""
         choices = self.lines
         min_r = self.min_rep
@@ -349,9 +348,7 @@ class FileNode(Node):
                 for tup in product(choices, repeat=r):
                     yield join(tup)
 
-    def expand_resume(
-        self, start_from: str
-    ) -> Generator[tuple[str, str | None, bool], None, None]:
+    def expand_resume(self, start_from: str) -> Generator[tuple[str, str | None, bool]]:
         """resume generation for file content."""
         min_r = self.min_rep
         max_r = self.max_rep

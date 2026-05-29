@@ -1,5 +1,3 @@
-import pytest
-
 from fuse.utils.classes import CHAR_CLASSES, pattern_repl
 
 

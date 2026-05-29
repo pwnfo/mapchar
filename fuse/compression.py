@@ -1,9 +1,9 @@
-import gzip
 import bz2
+import gzip
 import lzma
-
-from typing import IO, Any, Iterator, Literal
+from collections.abc import Iterator
 from contextlib import contextmanager
+from typing import IO, Any, Literal
 
 from fuse.logger import log
 

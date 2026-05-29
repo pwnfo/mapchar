@@ -1,7 +1,6 @@
 import logging
-import pytest
 
-from fuse.logger import log, FuseRichHandler
+from fuse.logger import FuseRichHandler, log
 
 
 class TestLogger:

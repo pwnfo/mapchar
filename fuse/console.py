@@ -6,13 +6,10 @@ from typing import Any
 
 from rich.console import Console
 from rich.progress import (
-    BarColumn,
     Progress,
     ProgressColumn,
     SpinnerColumn,
-    TaskProgressColumn,
     TextColumn,
-    TimeRemainingColumn,
 )
 from rich.text import Text
 from rich.theme import Theme

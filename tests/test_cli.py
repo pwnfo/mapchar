@@ -1,6 +1,4 @@
-import pytest
-
-from fuse.cli import format_expression, GenerateOptions
+from fuse.cli import GenerateOptions, format_expression
 
 
 class TestFormatExpression:
@@ -59,7 +57,7 @@ class TestGenerateOptions:
         assert opts.wrange == (None, None)
         assert opts.threads == 1
         assert opts.flush_limit == 512 * 1024
-        assert opts.compresslevel == None
+        assert opts.compresslevel is None
 
     def test_with_values(self):
         opts = GenerateOptions(

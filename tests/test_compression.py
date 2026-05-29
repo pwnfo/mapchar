@@ -1,7 +1,6 @@
-import gzip
 import bz2
+import gzip
 import lzma
-import pytest
 
 from fuse.compression import (
     get_compression_extension,
@@ -84,7 +83,7 @@ class TestCompressedFileWriter:
         assert (tmp_path / "test.txt").exists()
         assert not (tmp_path / "test.txt.gz").exists()
 
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             assert f.read() == content
 
     def test_stdout_with_compression(self):

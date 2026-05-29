@@ -1,10 +1,8 @@
-from fuse import __description__, __author__, __credits__, __version__, BANNER
-
-import sys
 import argparse
-
-from fuse.logger import log
+import sys
 from typing import Never
+
+from fuse import __credits__, __description__, __version__
 
 CLI_EXAMPLES = """
 Examples:

@@ -1,5 +1,3 @@
-import pytest
-
 from fuse.args import create_parser
 
 

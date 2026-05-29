@@ -1,10 +1,10 @@
 import sys
-
-from typing import Iterator, IO, Any
+from collections.abc import Iterator
 from contextlib import contextmanager
+from typing import IO, Any
 
-from fuse.logger import log
 from fuse.compression import CompressionFormat, compressed_file_writer
+from fuse.logger import log
 
 
 @contextmanager

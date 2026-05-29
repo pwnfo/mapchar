@@ -1,6 +1,6 @@
 import pytest
 
-from fuse.utils.formatters import format_size, parse_size, format_time
+from fuse.utils.formatters import format_size, format_time, parse_size
 
 
 class TestFormatSize:

@@ -1,6 +1,7 @@
+from pathlib import Path
+
 import pytest
 
-from pathlib import Path
 from fuse.file_parser import InvalidSyntaxError, process_expr_file
 
 
@@ -80,7 +81,7 @@ class TestProcessExprFile:
         words = tmp_path / "words.txt"
         words.write_text("hello\nworld\n")
         fp = tmp_path / "rel.fuse"
-        fp.write_text(f"%include ./words.txt\n^{{2}}\n")
+        fp.write_text("%include ./words.txt\n^{2}\n")
         results = list(process_expr_file(str(fp)))
         assert len(results) == 1
         _, files = results[0]

@@ -1,6 +1,7 @@
+from io import StringIO
+
 from rich.console import Console
 from rich.text import Text
-from io import StringIO
 
 
 class ExprError(Exception):

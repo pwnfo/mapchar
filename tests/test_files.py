@@ -1,5 +1,4 @@
 import sys
-import pytest
 
 from fuse.utils.files import fuse_open
 

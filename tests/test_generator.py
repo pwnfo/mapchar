@@ -1,13 +1,12 @@
 import pytest
 
-from pathlib import Path
 from fuse.generator import (
-    ExprError,
-    Node,
-    FileNode,
-    FuseGenerator,
     BindDefNode,
     BindRefNode,
+    ExprError,
+    FileNode,
+    FuseGenerator,
+    Node,
 )
 
 

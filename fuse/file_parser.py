@@ -1,10 +1,10 @@
 import re
-
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
-from fuse.utils.files import fuse_open
 from fuse.exceptions import InvalidSyntaxError
+from fuse.utils.files import fuse_open
+
 
 def process_expr_file(
     filepath: str,

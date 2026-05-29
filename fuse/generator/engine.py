@@ -1,10 +1,10 @@
 import re
-from itertools import product
-from typing import Generator, Any
+from collections.abc import Generator
+from typing import Any
 
-from fuse.utils.classes import pattern_repl
 from fuse.generator.exceptions import ExprError
-from fuse.generator.nodes import Node, FileNode, BindDefNode, BindRefNode
+from fuse.generator.nodes import BindDefNode, BindRefNode, FileNode, Node
+from fuse.utils.classes import pattern_repl
 
 
 class FuseGenerator:
@@ -344,7 +344,7 @@ class FuseGenerator:
         idx: int,
         start_token: str | None,
         bindings: dict[str, str] | None = None,
-    ) -> Generator[str, None, None]:
+    ) -> Generator[str]:
         """recursive word combination generator with resume logic and binding support."""
         if bindings is None:
             bindings = {}
@@ -361,9 +361,7 @@ class FuseGenerator:
             else:
                 base_vals = list(self._combine_resume(cur.inner_nodes, 0, None, {}))
 
-                def _rep_gen(
-                    base: list[str], mn: int, mx: int
-                ) -> Generator[str, None, None]:
+                def _rep_gen(base: list[str], mn: int, mx: int) -> Generator[str]:
                     for r in range(mn, mx + 1):
                         for val in base:
                             yield val * r if r > 0 else ""
@@ -411,7 +409,7 @@ class FuseGenerator:
         nodes: list[Node | FileNode],
         start_token: str | None = None,
         end_token: str | None = None,
-    ) -> Generator[str, None, None]:
+    ) -> Generator[str]:
         """starts the wordlist generation, optionally bounded by start_token and end_token."""
         iterator = self._combine_resume(nodes, 0, start_token)
         found = False if start_token else True
@@ -650,9 +648,10 @@ class FuseGenerator:
                         else:
                             node_count += k**r
                             node_bytes += r * (k ** (r - 1)) * sum_len
-            total_count, total_bytes = total_count * node_count, (
-                total_bytes * node_count
-            ) + (node_bytes * total_count)
+            total_count, total_bytes = (
+                total_count * node_count,
+                (total_bytes * node_count) + (node_bytes * total_count),
+            )
 
         full_total_bytes = int(total_bytes + (delimiter_len * total_count))
         full_total_count = int(total_count)

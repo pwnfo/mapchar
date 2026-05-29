@@ -1,34 +1,33 @@
+import ctypes
+import multiprocessing
 import re
 import sys
-import tty
-import ctypes
 import termios
 import threading
-import multiprocessing
-
+import tty
 from dataclasses import dataclass
 from datetime import datetime
 from logging import ERROR
-from typing import Any
+from multiprocessing.connection import Connection
+from multiprocessing.queues import Queue
+from multiprocessing.sharedctypes import Synchronized
+from multiprocessing.synchronize import Event
 from time import perf_counter
-from fuse import BANNER
+from typing import Any
 
-from fuse.logger import log
+from fuse import FUSE_BANNER
 from fuse.args import create_parser
+from fuse.compression import (
+    COMPRESSION_LEVEL_RANGES,
+    CompressionFormat,
+)
 from fuse.console import get_progress
+from fuse.exceptions import InvalidSyntaxError
+from fuse.file_parser import process_expr_file
+from fuse.generator import ExprError, FuseGenerator, Node
+from fuse.logger import log
 from fuse.utils.files import fuse_open
 from fuse.utils.formatters import format_size, format_time, parse_size
-from fuse.generator import ExprError, Node, FuseGenerator
-from fuse.file_parser import process_expr_file
-from fuse.compression import (
-    CompressionFormat,
-    COMPRESSION_LEVEL_RANGES,
-)
-from fuse.exceptions import InvalidSyntaxError
-from multiprocessing.synchronize import Event
-from multiprocessing.sharedctypes import Synchronized
-from multiprocessing.queues import Queue
-from multiprocessing.connection import Connection
 
 
 @dataclass
@@ -424,7 +423,13 @@ def format_expression(expression: str, files: list[str]) -> tuple[str, list[str]
         # example: fuse '/d^' '//[2-5]/d' -> '/d[2-5]/d'
         if file_path.startswith("//"):
             inline = file_path.replace("//", "", 1)
-            expression = re.sub(r"(?<!\\)\^", lambda m: inline, expression, count=1)
+
+            expression = re.sub(
+                r"(?<!\\)\^",
+                lambda m: inline,  # noqa: B023
+                expression,
+                count=1,
+            )
         else:
             files_out.append(file_path)
 
@@ -437,13 +442,13 @@ def print_info(
     """Displays generation statistics and information before execution."""
     if compressor is None:
         log.info(
-            BANNER
+            FUSE_BANNER
             + f"\nFuse will generate [bold rgb(255,120,0)]{s_words:,} entries[/] "
             f"({estimated_size})."
         )
     else:
         log.info(
-            BANNER
+            FUSE_BANNER
             + f"\nFuse will generate [bold rgb(255,120,0)]{s_words:,} entries[/] "
             f"({estimated_size} [underline]uncompressed[/], {compressor})."
         )
@@ -545,7 +550,7 @@ def main() -> int:
                     nodes = generator.parse(tokens, files=(expr_files or None))
                     # calculates statistics for the `generate` call
                     s_bytes, s_words = generator.stats(
-                        nodes, delimiter_len=len(args.delimiter.encode('utf-8'))
+                        nodes, delimiter_len=len(args.delimiter.encode("utf-8"))
                     )
                 except ExprError as e:
                     log.error(e)
@@ -574,7 +579,7 @@ def main() -> int:
             # to be generated
             s_bytes, s_words = generator.stats(
                 nodes,
-                delimiter_len=len(args.delimiter.encode('utf-8')),
+                delimiter_len=len(args.delimiter.encode("utf-8")),
                 start_token=args.start,
                 end_token=args.end,
             )

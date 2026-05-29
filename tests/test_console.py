@@ -1,6 +1,5 @@
-import pytest
-from unittest.mock import Mock, patch
 from threading import Event
+from unittest.mock import patch
 
 from rich.text import Text
 
