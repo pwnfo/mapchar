@@ -7,7 +7,7 @@ For very complex generations, you can author ``.fuse`` files instead of invoking
 
 **Syntax Overview**
 
-- Comments start with ``# `` (hash followed by a space) at the beginning of a line, or ``" # "`` (space + hash + space) when used inline.
+- Comments start with ``"# "`` (hash followed by a space) at the beginning of a line, or ``" # "`` (space + hash + space) when used inline.
 - ``%define name pattern``: Replace ``$name;`` with ``pattern`` throughout the rest of the file.
 - ``%include filename.txt``: Expressly opens a file relative to the ``.fuse`` script or an absolute path.
 - **Important**: When you declare a ``%include``, that file is bound to the ``^`` placeholder in the **very next expression line**. It does not persist globally. You can declare multiple ``%define`` lines consecutively to bind to multiple ``^`` placeholders in the next expression.
