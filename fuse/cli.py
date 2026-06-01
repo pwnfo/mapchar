@@ -365,7 +365,10 @@ def generate(
         elapsed = perf_counter() - start_time
         speed = int(total_words / elapsed) if elapsed > 0 else 0
 
-        if not options.delimiter.endswith("\n") and options.filename is None:
+        if (
+            not (options.delimiter.endswith("\n") or options.quiet_mode)
+            and options.filename is None
+        ):
             sys.stdout.write("\n")
             sys.stdout.flush()
 
@@ -606,6 +609,7 @@ def main() -> int:
     except KeyboardInterrupt:
         log.error("Unexpected keyboard interruption!")
     finally:
-        sys.stdout.write("\033[?25h")  # fix cursor bug
+        if not args.quiet:
+            sys.stdout.write("\033[?25h")  # fix cursor bug
 
     return 1
