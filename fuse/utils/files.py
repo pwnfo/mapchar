@@ -3,7 +3,11 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import IO, Any
 
-from fuse.compression import CompressionFormat, compressed_file_writer
+from fuse.compression import (
+    CompressionFormat,
+    compressed_file_writer,
+    ensure_compression_extension,
+)
 from fuse.logger import log
 
 
@@ -24,32 +28,37 @@ def fuse_open(
     """
     fp: Any = None
 
-    if file is None:
-        yield sys.stdout
-    elif compression is not None:
-        with compressed_file_writer(
-            file, compression, compresslevel=compresslevel
-        ) as fp:
-            yield fp
-    else:
-        try:
-            fp = open(file, *args, **kwargs)
-            yield fp
-        except FileNotFoundError:
-            log.error(f'file "{file}" not found.')
-            yield None
-        except PermissionError:
-            log.error(f'no permission for "{file}".')
-            yield None
-        except IsADirectoryError:
-            log.error(f'"{file}" is a directory.')
-            yield None
-        except FileExistsError:
-            log.error(f'"{file}" already exists.')
-            yield None
-        except Exception as e:
-            log.exception(f"unexpected error: {e}.")
-            yield None
-        finally:
-            if fp is not None:
-                fp.close()
+    try:
+        if file is None:
+            yield sys.stdout
+            return
+
+        if compression is not None:
+            file = ensure_compression_extension(compression, file)
+
+            with compressed_file_writer(
+                file, compression, compresslevel=compresslevel
+            ) as fp:
+                yield fp
+            return
+
+        fp = open(file, *args, **kwargs)
+        yield fp
+    except FileNotFoundError:
+        log.error(f"file {file!r} not found.")
+        yield None
+    except PermissionError:
+        log.error(f"no permission for {file!r}.")
+        yield None
+    except IsADirectoryError:
+        log.error(f"{file!r} is a directory.")
+        yield None
+    except FileExistsError:
+        log.error(f"{file!r} already exists.")
+        yield None
+    except Exception:
+        log.exception(f"unexpected error while opening {file!r}")
+        yield None
+    finally:
+        if fp is not None:
+            fp.close()
