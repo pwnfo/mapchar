@@ -273,7 +273,7 @@ def generate(
                 if i == 0:
                     w_start = start_token
                 else:
-                    w_start = generator.get_word_at_index(nodes, current_idx - 1)
+                    w_start = generator.get_word_at_index(nodes, current_idx)
 
                 current_idx += t_count
                 w_end = generator.get_word_at_index(nodes, current_idx - 1)
