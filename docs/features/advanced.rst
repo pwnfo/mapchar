@@ -38,11 +38,12 @@ Smart Skipping & Chunking
 -------------------------
 Large permutations quickly hit constraints. Fuse addresses this through algorithmic seeking. Instead of creating combinations starting from `A` waiting until it hits your target, Fuse calculates precisely where a specific target begins and resumes generation from there optimally.
 
-You can segment workloads using ``-S/--start`` and ``-E/--end``.
+You can segment workloads using ``-s/--start`` and ``-e/--end``.
 
 .. code-block:: bash
 
-   $ fuse '/l{4}' -S abcd -E wxyz
+   $ fuse '/l{4}' -s abcd -e wxyz
+   abcd
    abce
    abcf
    ...
