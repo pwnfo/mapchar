@@ -5,6 +5,7 @@ import sys
 import termios
 import threading
 import tty
+from argparse import Namespace
 from dataclasses import dataclass
 from datetime import datetime
 from logging import ERROR
@@ -14,6 +15,8 @@ from multiprocessing.sharedctypes import Synchronized
 from multiprocessing.synchronize import Event
 from time import perf_counter
 from typing import Any
+
+from rich.console import Console
 
 from fuse import FUSE_BANNER
 from fuse.args import create_parser
@@ -445,6 +448,68 @@ def format_expression(expression: str, files: list[str]) -> tuple[str, list[str]
     return expression, files_out
 
 
+def print_pattern_stats(
+    generator: FuseGenerator,
+    nodes: list[list[Any]],
+    tokens: list[list[Any]],
+    args: Namespace,
+) -> int:
+    """Displays detailed pattern statistics."""
+    console = Console()
+
+    delim_len = len(args.delimiter.encode("utf-8"))
+
+    try:
+        s_bytes, s_words = generator.stats(
+            nodes, delimiter_len=delim_len, start_token=args.start, end_token=args.end
+        )
+        u_bytes, u_words = generator.stats(nodes, delimiter_len=delim_len)
+    except ExprError as e:
+        log.error(e)
+        return 1
+
+    total_tokens = sum(len(t) for t in tokens)
+    total_nodes = sum(len(n) for n in nodes)
+    avg_len = u_bytes / u_words if u_words > 0 else 0
+
+    console.print(FUSE_BANNER)
+    console.print("[bold underline white]Pattern Statistics[/]")
+
+    stats_list = [
+        ("Expressions", len(nodes)),
+        ("Total Tokens", total_tokens),
+        ("Total Nodes", total_nodes),
+        ("Delimiter", f"{args.delimiter!r} ({delim_len} bytes)"),
+        ("Average Length", f"{avg_len - delim_len:.2f} chars"),
+    ]
+
+    for label, value in stats_list:
+        console.print(f"  [white]{label:.<20}[/] [bold white]{value}[/]")
+
+    if args.start or args.end:
+        console.print("\n[bold underline white]Range Filtering[/]")
+        ps_words = (s_words / u_words) * 100 if u_words > 0 else 0
+        pu_words = 100 - ps_words
+        range_list = [
+            ("Start Word", args.start or "[italic]None[/]"),
+            ("End Word", args.end or "[italic]None[/]"),
+            ("Filtered Words", f"{s_words:,} ({ps_words:.2f}%)"),
+            ("Ignored Words", f"{u_words - s_words:,} ({pu_words:.2f}%)"),
+        ]
+        for label, value in range_list:
+            console.print(f"  [white]{label:.<20}[/] [bold white]{value}[/]")
+
+    console.print("\n[bold underline white]Final Result[/]")
+    try:
+        console.print(f"  Entries to generate: [bold white]{s_words:,}[/]")
+        console.print(
+            f"  Estimated size:      [bold white]{format_size(s_bytes, d=2)}[/] [dim white]({s_bytes} bytes)[/]"
+        )
+    except (OverflowError, ValueError):
+        console.print("  [white italic]<OverflowError>[/]")
+    return 0
+
+
 def print_info(
     s_words: int, estimated_size: str, compressor: None | str = None
 ) -> None:
@@ -486,10 +551,6 @@ def main() -> int:
         )
         return 1
 
-    # -----------------------------------------------
-    # checks if the specified compression level (-l)
-    # is supported by the selected format (-z)
-    # -----------------------------------------------
     compresslevel = args.compresslevel
     if args.compress is not None:
         if compresslevel is not None:
@@ -542,8 +603,8 @@ def main() -> int:
     generator = FuseGenerator()
 
     nodes: list[list[Any]] = []
+    tokens_list: list[list[Any]] = []
 
-    # file mode (-f/--file)
     if args.expr_file is not None:
         try:
             for d in process_expr_file(args.expr_file):
@@ -553,11 +614,10 @@ def main() -> int:
                 expression, expr_files = d
 
                 try:
-                    tokens_list = generator.tokenize(expression)
-                    nodes_list = generator.parse(
-                        tokens_list, files=(expr_files or None)
-                    )
-                    nodes.extend(nodes_list)
+                    t = generator.tokenize(expression)
+                    n = generator.parse(t, files=(expr_files or None))
+                    tokens_list.extend(t)
+                    nodes.extend(n)
                 except ExprError as e:
                     log.error(e)
                     return 1
@@ -578,9 +638,10 @@ def main() -> int:
             log.error(e)
             return 1
 
+    if args.stats:
+        return print_pattern_stats(generator, nodes, tokens_list, args)
+
     try:
-        # number of bytes (`s_bytes`) and the number of words (`s_words`)
-        # to be generated
         s_bytes, s_words = generator.stats(
             nodes,
             delimiter_len=len(args.delimiter.encode("utf-8")),
@@ -592,7 +653,6 @@ def main() -> int:
         return 1
 
     estimated_size = format_size(s_bytes, d=2)
-
     print_info(s_words, estimated_size, compressor=args.compress)
 
     if not (args.quiet or args.non_interactive) and not pause():

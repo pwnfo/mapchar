@@ -56,6 +56,13 @@ def create_parser(prog: str = "fuse") -> FuseParser:
         help="show version information and exit",
     )
     general_group.add_argument(
+        "-S",
+        "--stats",
+        action="store_true",
+        dest="stats",
+        help="show pattern statistics and exit",
+    )
+    general_group.add_argument(
         "-q",
         "--quiet",
         action="store_true",
