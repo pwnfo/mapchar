@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fuse-generator"
-version = "7.0.0"
+version = "7.0.1"
 description = "Generate wordlists using pattern logic and expressions."
 authors = ["Ryan R. <pwnfo@proton.me>"]
 readme = "README.md"
