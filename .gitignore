@@ -6,3 +6,5 @@ env
 dist
 docs/_build
 TODO.md
+.ruff_cache
+.pytest_cache
