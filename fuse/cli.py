@@ -1,5 +1,6 @@
 import ctypes
 import multiprocessing
+import os
 import re
 import sys
 import termios
@@ -144,15 +145,20 @@ def generate(
                         except Exception:
                             pass
 
-                        while True:
-                            msg = queue.get()
-                            if msg is None:
-                                break
+                        try:
+                            while True:
+                                msg = queue.get()
+                                if msg is None:
+                                    break
 
-                            data, processed = msg
-                            if data:
-                                fp.write(data)
-                            progress.value += processed
+                                data, processed = msg
+                                if data:
+                                    fp.write(data)
+                                progress.value += processed
+                        except BrokenPipeError:
+                            stop_event.set()
+                            devnull = os.open(os.devnull, os.O_WRONLY)
+                            os.dup2(devnull, sys.stdout.fileno())
 
                 except Exception as e:
                     stop_event.set()
@@ -343,14 +349,26 @@ def generate(
                     buf_processed += item_b
 
                     if buf_processed >= flush_limit:
-                        fp.write("".join(buf))
+                        try:
+                            fp.write("".join(buf))
+                        except BrokenPipeError:
+                            devnull = os.open(os.devnull, os.O_WRONLY)
+                            os.dup2(devnull, sys.stdout.fileno())
+                            return 0
+
                         progress.value += buf_processed
                         buf.clear()
                         buf_processed = 0
 
                 if buf_processed > 0:
-                    if buf:
-                        fp.write("".join(buf))
+                    try:
+                        if buf:
+                            fp.write("".join(buf))
+                        fp.flush()
+                    except BrokenPipeError:
+                        devnull = os.open(os.devnull, os.O_WRONLY)
+                        os.dup2(devnull, sys.stdout.fileno())
+                        return 0
                     progress.value += buf_processed
 
     except KeyboardInterrupt:
