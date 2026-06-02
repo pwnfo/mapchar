@@ -249,8 +249,71 @@ class FuseGenerator:
             i += 1
         return tokens
 
-    def tokenize(self, pattern: str) -> list[tuple[str, Any]]:
-        return self._tokenize_raw(pattern_repl(pattern))
+    def tokenize(self, pattern: str) -> list[list[tuple[str, Any]]]:
+        pr = pattern_repl(pattern)
+        expressions: list[str] = []
+        buf: list[str] = []
+        i = 0
+        n = len(pr)
+        depth_square = 0
+        depth_paren = 0
+        depth_brace = 0
+        depth_bind = 0
+
+        while i < n:
+            ch = pr[i]
+            if ch == "\\":
+                buf.append(ch)
+                if i + 1 < n:
+                    buf.append(pr[i + 1])
+                    i += 2
+                else:
+                    i += 1
+                continue
+
+            if ch == "[":
+                depth_square += 1
+            elif ch == "]":
+                if depth_square > 0:
+                    depth_square -= 1
+            elif ch == "(":
+                depth_paren += 1
+            elif ch == ")":
+                if depth_paren > 0:
+                    depth_paren -= 1
+            elif ch == "{":
+                depth_brace += 1
+            elif ch == "}":
+                if depth_brace > 0:
+                    depth_brace -= 1
+            elif ch == "<":
+                if i + 1 < n and pr[i + 1] == "@":
+                    depth_bind += 1
+            elif ch == ">":
+                if (
+                    depth_bind > 0
+                    and depth_square == 0
+                    and depth_paren == 0
+                    and depth_brace == 0
+                ):
+                    depth_bind -= 1
+            elif ch == "|" and i + 1 < n and pr[i + 1] == "|":
+                if (
+                    depth_square == 0
+                    and depth_paren == 0
+                    and depth_brace == 0
+                    and depth_bind == 0
+                ):
+                    expressions.append("".join(buf))
+                    buf = []
+                    i += 2
+                    continue
+
+            buf.append(ch)
+            i += 1
+
+        expressions.append("".join(buf))
+        return [self._tokenize_raw(expr) for expr in expressions]
 
     def _parse_tokens(
         self,
@@ -319,23 +382,25 @@ class FuseGenerator:
         return count
 
     def parse(
-        self, tokens: list[tuple[str, Any]], files: list[str] | None = None
-    ) -> list:
-        count_ft = self._count_file_tokens(tokens)
-        if count_ft:
-            if not files:
-                raise ExprError("pattern requires files but none were provided")
-            if count_ft == 1:
-                file_groups: list[list[str]] = [files]
-            else:
-                if len(files) < count_ft:
+        self, tokens_multi: list[list[tuple[str, Any]]], files: list[str] | None = None
+    ) -> list[list[Any]]:
+        nodes: list[list[Any]] = []
+        files = files or []
+        file_idx = 0
+        for tokens in tokens_multi:
+            count_ft = self._count_file_tokens(tokens)
+            if count_ft:
+                if len(files) - file_idx < count_ft:
                     raise ExprError(
-                        f"pattern requires {count_ft} files but {len(files)} were provided"
+                        f"pattern requires {count_ft} files but {(len(files) - file_idx)} were provided"
                     )
-                file_groups = [[f] for f in files[:count_ft]]
-        else:
-            file_groups = []
-        nodes, _ = self._parse_tokens(tokens, file_groups, 0)
+                file_groups = [[f] for f in files[file_idx : file_idx + count_ft]]
+                file_idx += count_ft
+            else:
+                file_groups = []
+            expr_nodes, _ = self._parse_tokens(tokens, file_groups, 0)
+            nodes.append(expr_nodes)
+
         return nodes
 
     def _combine_resume(
@@ -406,25 +471,29 @@ class FuseGenerator:
 
     def generate(
         self,
-        nodes: list[Node | FileNode],
+        nodes: list[list[Node | FileNode]],
         start_token: str | None = None,
         end_token: str | None = None,
     ) -> Generator[str]:
         """starts the wordlist generation, optionally bounded by start_token and end_token."""
-        iterator = self._combine_resume(nodes, 0, start_token)
-        found = False if start_token else True
+        found_start = False if start_token else True
 
-        for item in iterator:
-            if not found:
-                if start_token is not None and item >= start_token:
-                    found = True
-                else:
+        for expr_nodes in nodes:
+            if not found_start and start_token is not None:
+                try:
+                    self._calculate_skipped_stats(expr_nodes, start_token)
+                    found_start = True
+                    iterator = self._combine_resume(expr_nodes, 0, start_token)
+                except ExprError:
                     continue
+            else:
+                iterator = self._combine_resume(expr_nodes, 0, None)
 
-            yield item
+            for item in iterator:
+                yield item
 
-            if end_token and item == end_token:
-                break
+                if end_token and item == end_token:
+                    return
 
     def _get_suffix_capacity(self, nodes: list[Node | FileNode], start_idx: int) -> int:
         """calculates total combinations of subsequent nodes."""
@@ -444,13 +513,13 @@ class FuseGenerator:
 
         for i, node in enumerate(nodes):
             if isinstance(node, BindDefNode):
-                inner_bytes, inner_count = self.stats(
+                inner_bytes, inner_count = self._stats_single(
                     node.inner_nodes, delimiter_len=0, binding_stats=local_binding_stats
                 )
                 avg_len = inner_bytes // inner_count if inner_count > 0 else 0
                 local_binding_stats[node.name] = (inner_count, avg_len)
 
-            suffix_bytes, suffix_count = self.stats(
+            suffix_bytes, suffix_count = self._stats_single(
                 nodes[i + 1 :], delimiter_len=0, binding_stats=local_binding_stats
             )
 
@@ -541,6 +610,21 @@ class FuseGenerator:
 
         return skipped_count, skipped_bytes
 
+    def _calculate_skipped_stats_multi(
+        self, nodes: list[list[Any]], target: str
+    ) -> tuple[int, int]:
+        skipped_count = 0
+        skipped_bytes = 0
+        for expr_nodes in nodes:
+            try:
+                c, b = self._calculate_skipped_stats(expr_nodes, target)
+                return skipped_count + c, skipped_bytes + b
+            except ExprError:
+                full_b, full_c = self._stats_single(expr_nodes, delimiter_len=0)
+                skipped_count += full_c
+                skipped_bytes += full_b
+        raise ExprError(f"word {target!r} is not reachable by this expression")
+
     def get_word_at_index(self, nodes: list, index: int) -> str:
         """retrieves the word at a specific index."""
         result: list[str] = []
@@ -571,26 +655,38 @@ class FuseGenerator:
                 result.append(node.get_item_at(node_idx))
         return "".join(result)
 
-    def stats(
+    def get_word_at_index_multi(self, nodes: list[list[Any]], index: int) -> str:
+        word, _ = self.get_word_and_expr_at_index(nodes, index)
+        return word
+
+    def get_word_and_expr_at_index(
+        self, nodes: list[list[Any]], index: int
+    ) -> tuple[str, int]:
+        for idx, expr_nodes in enumerate(nodes):
+            _, full_c = self._stats_single(expr_nodes, delimiter_len=0)
+            if index < full_c:
+                return self.get_word_at_index(expr_nodes, index), idx
+            index -= full_c
+        raise ExprError("index out of bounds")
+
+    def _stats_single(
         self,
         nodes: list,
         delimiter_len: int = 1,
-        start_token: str | None = None,
-        end_token: str | None = None,
         binding_stats: dict[str, tuple[int, int]] | None = None,
     ) -> tuple[int, int]:
-        """calculates wordlist stats, adjusted for start_token and end_token range."""
         total_count = 1
         total_bytes = 0
         if binding_stats is None:
             binding_stats = {}
         else:
-            # copy to avoid modifying parent context
             binding_stats = dict(binding_stats)
 
         for node in nodes:
             if isinstance(node, BindDefNode):
-                inner_bytes, inner_count = self.stats(node.inner_nodes, delimiter_len=0)
+                inner_bytes, inner_count = self._stats_single(
+                    node.inner_nodes, delimiter_len=0
+                )
                 node_count = 0
                 node_bytes = 0
                 min_r, max_r = node.min_rep, node.max_rep
@@ -655,28 +751,74 @@ class FuseGenerator:
 
         full_total_bytes = int(total_bytes + (delimiter_len * total_count))
         full_total_count = int(total_count)
+        return full_total_bytes, full_total_count
 
-        if not start_token and not end_token:
-            return full_total_bytes, full_total_count
+    def stats(
+        self,
+        nodes: list[list[Any]],
+        delimiter_len: int = 1,
+        start_token: str | None = None,
+        end_token: str | None = None,
+    ) -> tuple[int, int]:
+        total_b = 0
+        total_c = 0
 
-        start_count = 0
-        start_bytes = 0
+        start_sk_c = 0
+        start_sk_b = 0
+        start_found = False if start_token else True
+
+        end_sk_c = 0
+        end_sk_b = 0
+        end_found = False if end_token else True
+
+        for expr_nodes in nodes:
+            full_b, full_c = self._stats_single(expr_nodes, delimiter_len=delimiter_len)
+
+            if not start_found and start_token is not None:
+                try:
+                    c, b = self._calculate_skipped_stats(
+                        expr_nodes, start_token
+                    )  # does not include delimiter!
+                    start_sk_c += c
+                    start_sk_b += b + (c * delimiter_len)
+                    start_found = True
+                except ExprError:
+                    start_sk_c += full_c
+                    start_sk_b += full_b
+
+            if not end_found and end_token is not None:
+                try:
+                    c, b = self._calculate_skipped_stats(expr_nodes, end_token)
+                    end_sk_c += c + 1
+                    end_word_size = len(end_token.encode("utf-8"))
+                    end_sk_b += b + (c * delimiter_len) + end_word_size + delimiter_len
+                    end_found = True
+                except ExprError:
+                    end_sk_c += full_c
+                    end_sk_b += full_b
+
+            total_b += full_b
+            total_c += full_c
+
+        if start_token and not start_found:
+            raise ExprError(f"word {start_token!r} is not reachable by this expression")
+        if end_token and not end_found:
+            raise ExprError(f"word {end_token!r} is not reachable by this expression")
+
+        actual_count = total_c
+        actual_bytes = total_b
+
         if start_token:
-            start_count, start_bytes = self._calculate_skipped_stats(nodes, start_token)
-            start_bytes += start_count * delimiter_len
+            actual_count = total_c - start_sk_c
+            actual_bytes = total_b - start_sk_b
 
-        end_count = full_total_count
-        end_bytes = full_total_bytes
         if end_token:
-            sk_count, sk_bytes = self._calculate_skipped_stats(nodes, end_token)
-            end_count = sk_count + 1
-            end_word_size = len(end_token.encode("utf-8"))
-            end_bytes = (
-                sk_bytes + (sk_count * delimiter_len) + end_word_size + delimiter_len
-            )
-
-        actual_count = end_count - start_count
-        actual_bytes = end_bytes - start_bytes
+            if start_token:
+                actual_count = end_sk_c - start_sk_c
+                actual_bytes = end_sk_b - start_sk_b
+            else:
+                actual_count = end_sk_c
+                actual_bytes = end_sk_b
 
         if actual_count < 0:
             actual_count = 0

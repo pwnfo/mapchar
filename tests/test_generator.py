@@ -154,11 +154,11 @@ class TestTokenize:
         self.gen = FuseGenerator()
 
     def test_plain_literal(self):
-        tokens = self.gen.tokenize("abc")
+        tokens = self.gen.tokenize("abc")[0]
         assert tokens == [("LIT", "a"), ("LIT", "b"), ("LIT", "c")]
 
     def test_escaped_char(self):
-        tokens = self.gen.tokenize("\\[")
+        tokens = self.gen.tokenize("\\[")[0]
         assert tokens == [("LIT", "[")]
 
     def test_escape_at_end_raises(self):
@@ -166,11 +166,11 @@ class TestTokenize:
             self.gen.tokenize("\\")
 
     def test_simple_class(self):
-        tokens = self.gen.tokenize("[abc]")
+        tokens = self.gen.tokenize("[abc]")[0]
         assert tokens == [("CLASS", ["a", "b", "c"])]
 
     def test_class_with_pipe(self):
-        tokens = self.gen.tokenize("[cat|dog]")
+        tokens = self.gen.tokenize("[cat|dog]")[0]
         assert tokens == [("CLASS", ["cat", "dog"])]
 
     def test_unclosed_class_raises(self):
@@ -182,7 +182,7 @@ class TestTokenize:
             self.gen.tokenize("[]")
 
     def test_literal_group(self):
-        tokens = self.gen.tokenize("(hello)")
+        tokens = self.gen.tokenize("(hello)")[0]
         assert tokens == [("CLASS", ["hello"])]
 
     def test_unclosed_literal_group_raises(self):
@@ -190,19 +190,19 @@ class TestTokenize:
             self.gen.tokenize("(hello")
 
     def test_numeric_range(self):
-        tokens = self.gen.tokenize("#[0-3]")
+        tokens = self.gen.tokenize("#[0-3]")[0]
         assert tokens == [("RANGE", ["0", "1", "2", "3"])]
 
     def test_numeric_range_with_step(self):
-        tokens = self.gen.tokenize("#[0-10:2]")
+        tokens = self.gen.tokenize("#[0-10:2]")[0]
         assert tokens == [("RANGE", ["0", "2", "4", "6", "8", "10"])]
 
     def test_descending_range(self):
-        tokens = self.gen.tokenize("#[5-3]")
+        tokens = self.gen.tokenize("#[5-3]")[0]
         assert tokens == [("RANGE", ["5", "4", "3"])]
 
     def test_descending_range_with_step(self):
-        tokens = self.gen.tokenize("#[10-0:-3]")
+        tokens = self.gen.tokenize("#[10-0:-3]")[0]
         assert tokens == [("RANGE", ["10", "7", "4", "1"])]
 
     def test_range_zero_step_raises(self):
@@ -222,27 +222,27 @@ class TestTokenize:
             self.gen.tokenize("#[abc]")
 
     def test_hash_without_bracket_is_literal(self):
-        tokens = self.gen.tokenize("#")
+        tokens = self.gen.tokenize("#")[0]
         assert tokens == [("LIT", "#")]
 
     def test_qmark_token(self):
-        tokens = self.gen.tokenize("[ab]?")
+        tokens = self.gen.tokenize("[ab]?")[0]
         assert ("QMARK", None) in tokens
 
     def test_file_token(self):
-        tokens = self.gen.tokenize("^")
+        tokens = self.gen.tokenize("^")[0]
         assert tokens == [("FILE", None)]
 
     def test_multiple_file_tokens(self):
-        tokens = self.gen.tokenize("^^")
+        tokens = self.gen.tokenize("^^")[0]
         assert tokens == [("FILE", None), ("FILE", None)]
 
     def test_braces_exact(self):
-        tokens = self.gen.tokenize("[ab]{3}")
+        tokens = self.gen.tokenize("[ab]{3}")[0]
         assert ("BRACES", (3, 3)) in tokens
 
     def test_braces_range(self):
-        tokens = self.gen.tokenize("[ab]{2,4}")
+        tokens = self.gen.tokenize("[ab]{2,4}")[0]
         assert ("BRACES", (2, 4)) in tokens
 
     def test_braces_min_gt_max_raises(self):
@@ -260,45 +260,47 @@ class TestParse:
 
     def test_literal_nodes(self):
         tokens = self.gen.tokenize("abc")
-        nodes = self.gen.parse(tokens)
+        nodes = self.gen.parse(tokens)[0]
         assert len(nodes) == 1
         assert nodes[0].base == ["abc"]
 
     def test_class_node(self):
         tokens = self.gen.tokenize("[ab]")
-        nodes = self.gen.parse(tokens)
+        nodes = self.gen.parse(tokens)[0]
         assert len(nodes) == 1
         assert nodes[0].base == ["a", "b"]
 
     def test_braces_applied(self):
         tokens = self.gen.tokenize("[ab]{2,3}")
-        nodes = self.gen.parse(tokens)
+        nodes = self.gen.parse(tokens)[0]
         assert len(nodes) == 1
         assert nodes[0].min_rep == 2
         assert nodes[0].max_rep == 3
 
     def test_optional_applied(self):
         tokens = self.gen.tokenize("[ab]?")
-        nodes = self.gen.parse(tokens)
+        nodes = self.gen.parse(tokens)[0]
         assert len(nodes) == 1
         assert nodes[0].min_rep == 0
         assert nodes[0].max_rep == 1
 
     def test_file_node_single_placeholder(self, wordlist_file):
         tokens = self.gen.tokenize("^")
-        nodes = self.gen.parse(tokens, files=[str(wordlist_file)])
+        nodes = self.gen.parse(tokens, files=[str(wordlist_file)])[0]
         assert len(nodes) == 1
         assert isinstance(nodes[0], FileNode)
 
     def test_file_node_multiple_placeholders(self, wordlist_file, wordlist_file_2):
         tokens = self.gen.tokenize("^^")
-        nodes = self.gen.parse(tokens, files=[str(wordlist_file), str(wordlist_file_2)])
+        nodes = self.gen.parse(
+            tokens, files=[str(wordlist_file), str(wordlist_file_2)]
+        )[0]
         assert len(nodes) == 2
         assert all(isinstance(n, FileNode) for n in nodes)
 
     def test_file_placeholder_without_files_raises(self):
         tokens = self.gen.tokenize("^")
-        with pytest.raises(ExprError, match="requires files"):
+        with pytest.raises(ExprError, match="requires 1 files"):
             self.gen.parse(tokens)
 
     def test_insufficient_files_raises(self, wordlist_file):
@@ -308,7 +310,7 @@ class TestParse:
 
     def test_range_node(self):
         tokens = self.gen.tokenize("#[0-2]")
-        nodes = self.gen.parse(tokens)
+        nodes = self.gen.parse(tokens)[0]
         assert len(nodes) == 1
         assert nodes[0].base == ["0", "1", "2"]
 
@@ -451,24 +453,24 @@ class TestGetWordAtIndex:
     def test_first_word(self):
         tokens = self.gen.tokenize("[ab][12]")
         nodes = self.gen.parse(tokens)
-        assert self.gen.get_word_at_index(nodes, 0) == "a1"
+        assert self.gen.get_word_at_index_multi(nodes, 0) == "a1"
 
     def test_last_word(self):
         tokens = self.gen.tokenize("[ab][12]")
         nodes = self.gen.parse(tokens)
-        assert self.gen.get_word_at_index(nodes, 3) == "b2"
+        assert self.gen.get_word_at_index_multi(nodes, 3) == "b2"
 
     def test_middle_word(self):
         tokens = self.gen.tokenize("[ab][12]")
         nodes = self.gen.parse(tokens)
-        assert self.gen.get_word_at_index(nodes, 1) == "a2"
+        assert self.gen.get_word_at_index_multi(nodes, 1) == "a2"
 
     def test_consistency_with_generate(self):
         tokens = self.gen.tokenize("[abc][xyz]")
         nodes = self.gen.parse(tokens)
         generated = list(self.gen.generate(nodes))
         for idx, word in enumerate(generated):
-            assert self.gen.get_word_at_index(nodes, idx) == word
+            assert self.gen.get_word_at_index_multi(nodes, idx) == word
 
 
 class TestCalculateSkippedCount:
@@ -478,19 +480,19 @@ class TestCalculateSkippedCount:
     def test_first_word_skips_zero(self):
         tokens = self.gen.tokenize("[ab][12]")
         nodes = self.gen.parse(tokens)
-        count, _ = self.gen._calculate_skipped_stats(nodes, "a1")
+        count, _ = self.gen._calculate_skipped_stats_multi(nodes, "a1")
         assert count == 0
 
     def test_second_word_skips_one(self):
         tokens = self.gen.tokenize("[ab][12]")
         nodes = self.gen.parse(tokens)
-        count, _ = self.gen._calculate_skipped_stats(nodes, "a2")
+        count, _ = self.gen._calculate_skipped_stats_multi(nodes, "a2")
         assert count == 1
 
     def test_last_word(self):
         tokens = self.gen.tokenize("[ab][12]")
         nodes = self.gen.parse(tokens)
-        count, _ = self.gen._calculate_skipped_stats(nodes, "b2")
+        count, _ = self.gen._calculate_skipped_stats_multi(nodes, "b2")
         assert count == 3
 
 
@@ -538,7 +540,7 @@ class TestBinding:
             self.gen.stats(nodes)
 
     def test_tokenize_bind_def_produces_correct_token(self):
-        tokens = self.gen.tokenize("<@v=[abc]>")
+        tokens = self.gen.tokenize("<@v=[abc]>")[0]
         assert len(tokens) == 1
         kind, val = tokens[0]
         assert kind == "BIND_DEF"
@@ -551,14 +553,14 @@ class TestBinding:
 
     def test_parse_creates_bind_def_node(self):
         tokens = self.gen.tokenize("<@d=/d>")
-        nodes = self.gen.parse(tokens)
+        nodes = self.gen.parse(tokens)[0]
         assert len(nodes) == 1
         assert isinstance(nodes[0], BindDefNode)
         assert nodes[0].name == "d"
 
     def test_parse_creates_bind_ref_node(self):
         tokens = self.gen.tokenize("<@d=/d><@d>")
-        nodes = self.gen.parse(tokens)
+        nodes = self.gen.parse(tokens)[0]
         assert len(nodes) == 2
         assert isinstance(nodes[1], BindRefNode)
         assert nodes[1].name == "d"
@@ -577,7 +579,7 @@ class TestBinding:
 
     def test_bind_def_cardinality(self):
         tokens = self.gen.tokenize("<@d=/d>")
-        nodes = self.gen.parse(tokens)
+        nodes = self.gen.parse(tokens)[0]
         assert nodes[0].cardinality == 10
 
     def test_reuse_with_numeric_range(self):
