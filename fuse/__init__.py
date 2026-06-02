@@ -25,7 +25,7 @@ SOFTWARE.
 from .__version__ import __version__
 
 __author__ = "Ryan R. <pwnfo@proton.me>"
-__description__ = "Powerful pattern-based wordlist generation tool."
+__description__ = "Generate wordlists using pattern logic and expressions."
 __name__ = "fuse"
 __credits__ = f"Developed by {__author__}"
 __url__ = "https://github.com/pwnfo/fuse"

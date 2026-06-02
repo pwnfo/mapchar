@@ -1,7 +1,7 @@
 Welcome to Fuse's documentation!
 ================================
 
-Generate wordlists from concise expressions.
+Generate wordlists using pattern logic and expressions.
 
 Fuse is a blazing fast and robust wordlist generator that parses character classes, quantifiers, files, and numeric ranges. It brings a "regex-like" paradigm to generating precise datasets, allowing offensive security professionals and developers to generate specific password lists, payloads, or permutations from a compact syntax.
 

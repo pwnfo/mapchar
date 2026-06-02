@@ -2,12 +2,14 @@
   <br>
   <a href="https://github.com/pwnfo/fuse" target="_blank"><img src="images/icon.png" width="30%" alt="fuse"/></a>
   <br>
-  <span>Pattern-based wordlist generation tool</span>
+  <span>Generate wordlists using pattern logic and expressions</span>
   <br>
 </p>
 
 <p align="center">
   <a href="#installation">Installation</a>
+  &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;
+  <a href="#documentation">Documentation</a>
   &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;
   <a href="#usage">Usage</a>
   &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;
@@ -28,8 +30,18 @@
 | `pipx install fuse-generator` | `pip` may be used in place of `pipx` |
 | `git clone https://github.com/pwnfo/fuse.git && cd fuse && pip install .` | Clone and install directly from GitHub |
 
+## Documentation
+
+For a complete guide, feature explanations, and advanced examples, please visit [the documentation](https://fuse-generator.readthedocs.io/).
+
+<p align="center">
+  <a href="https://fuse-generator.readthedocs.io/" target="_blank">
+    <img src="images/readthedocs.svg" width="60%" alt="ReadTheDocs Documentation"/>
+  </a>
+</p>
 
 ## General usage
+
 
 To generate a wordlist from a simple expression:
 ```bash
