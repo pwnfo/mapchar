@@ -66,11 +66,11 @@ class TestCreateParser:
         assert args.compresslevel == 5
 
     def test_start_option(self):
-        args = self.parser.parse_args(["-S", "abc", "[ab]"])
+        args = self.parser.parse_args(["-s", "abc", "[ab]"])
         assert args.start == "abc"
 
     def test_end_option(self):
-        args = self.parser.parse_args(["-E", "xyz", "[ab]"])
+        args = self.parser.parse_args(["-e", "xyz", "[ab]"])
         assert args.end == "xyz"
 
     def test_file_option(self):

@@ -78,14 +78,14 @@ def create_parser(prog: str = "fuse") -> FuseParser:
         help="load patterns from file",
     )
     input_group.add_argument(
-        "-S",
+        "-s",
         "--start",
         metavar="<word>",
         dest="start",
         help="start writing output from <word>",
     )
     input_group.add_argument(
-        "-E",
+        "-e",
         "--end",
         metavar="<word>",
         dest="end",
