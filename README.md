@@ -22,7 +22,7 @@
 
 ## Installation
 
-> [!NOTE]  
+> [!NOTE]
 > It is **recommended** to install using `pipx` or `pip` for the PyPI version.
 
 | Method | Notes |
@@ -129,7 +129,7 @@ Example: `/l/l` generates all two-letter combinations (upper and lower case).
 You can analyze a pattern before generating it using the `-S/--stats` flag. This shows token counts, estimated size, and range filtering details.
 
 ```bash
-fuse -S '[a-z]{3}||[0-9]{3}'
+fuse -S '/l{3}||/d{3}'
 ```
 
 ### Quantifiers
