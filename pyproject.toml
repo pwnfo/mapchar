@@ -10,7 +10,6 @@ packages = [{ include = "fuse" }]
 [tool.poetry.dependencies]
 python = ">=3.10"
 rich = "^15.0.0"
-ruff = "^0.15.15"
 
 [tool.poetry.scripts]
 fuse = "fuse.cli:main"
@@ -19,6 +18,7 @@ fuse = "fuse.cli:main"
 mypy = "^1.20.0"
 pre-commit = "^4.5.1"
 pytest = "^9.0.3"
+ruff = "^0.15.15"
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "<9"
