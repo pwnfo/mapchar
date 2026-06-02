@@ -90,6 +90,17 @@ Examples:
    $ fuse '(admin)?[12]'
    # Yields: 1, 2, admin1, admin2
 
+Expression Alternation
+----------------------
+You can combine multiple independent expressions in a single line or template using the double-pipe operator ``||``. This is useful for generating wordlists from disparate patterns without creating separate files.
+
+.. code-block:: bash
+
+   $ fuse 'admin/d{2}||guest/d{2}'
+   # Yields: admin00, admin01... guest98, guest99...
+
+Unlike the single pipe ``|`` inside brackets (which works at the character/class level), the double pipe ``||`` operates at the top level of the generator, effectively chaining full expressions together.
+
 Escaping
 --------
 Need to output a reserved token like ``/d``, ``[``, ``}``, or ``^``? Escape it using a backslash ``\``.

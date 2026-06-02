@@ -17,6 +17,7 @@ Options
 
 * ``-o <path>, --output <path>``: Writes the generated wordlist reliably into a target file.
 * ``-f <path>, --file <path>``: Instead of an inline expression, runs a ``.fuse`` definition file.
+* ``-S, --stats``: Displays detailed pattern statistics (tokens, nodes, size).
 * ``-q, --quiet``: Disable progress bars and metric statistics. Great for `bash` pipes.
 * ``-n, --non-interactive``: Runs without interactive prompts.
 * ``-d <word>, --delimiter <word>``: Replaces the default newline (``\n``) delimiter with custom strings. Optional strings like ``\0`` can be used for zero-byte split integration.
@@ -30,5 +31,5 @@ Options
 
 **Range**
 
-* ``-S <word>, --start <word>``: Starts writing specifically from ``<word>``.
-* ``-E <word>, --end <word>``: Stops execution, ending precisely on ``<word>``.
+* ``-s <word>, --start <word>``: Starts writing specifically from ``<word>``.
+* ``-e <word>, --end <word>``: Stops execution, ending precisely on ``<word>``.

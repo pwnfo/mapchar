@@ -44,12 +44,10 @@ fuse '^:^' names.txt pass.txt
 Outputs can be manipulated, filtered, and saved.
 
 ```console
-
-Powerful pattern-based wordlist generation tool.
-
 General Options:
   -h, --help            show this help message and exit
   -v, --version         show version information and exit
+  -S, --stats           show pattern statistics and exit
   -q, --quiet           suppress non-essential output
   -n, --non-interactive
                         skip the confirmation prompt before execution
@@ -60,14 +58,13 @@ Generation Options:
   -b, --write-buffer <size>
                         output buffer size
   -w, --workers <1-64>  number of worker processes (default: 1)
-  -F, --filter <regex>  filter generated words with a regular expression
   -k, --flush-threshold <size>
                         flush output after reaching this byte threshold (default: 512KB)
 
 Input Options:
-  -f, --file <path>     load expressions from file
-  -S, --start <word>    start writing output from <word>
-  -E, --end <word>      stop writing output at <word>
+  -f, --file <path>     load patterns from file
+  -s, --start <word>    start writing output from <word>
+  -e, --end <word>      stop writing output at <word>
 
 Output Options:
   -o, --output <path>   write output to a file
@@ -110,8 +107,18 @@ Example: `/l/l` generates all two-letter combinations (upper and lower case).
 ### Custom classes and unions
 
 * `[abc]` selects **one character** from `a`, `b`, or `c`.
-* Use `|` to separate full-word alternatives (each treated as a multi-character token):
+* Use `|` to separate full-word alternatives inside classes:
   * `[admin|root|123]` inserts `admin` OR `root` OR `123` at that point.
+* Use `||` to separate **top-level expressions**:
+  * `fuse 'admin/d||guest/d'` chains two independent patterns.
+
+### Statistics
+
+You can analyze a pattern before generating it using the `-S/--stats` flag. This shows token counts, estimated size, and range filtering details.
+
+```bash
+fuse -S '[a-z]{3}||[0-9]{3}'
+```
 
 ### Quantifiers
 
