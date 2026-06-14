@@ -5,13 +5,7 @@ from time import sleep
 from typing import Any
 
 from rich.console import Console
-from rich.progress import (
-    Progress,
-    ProgressColumn,
-    SpinnerColumn,
-    TextColumn,
-    BarColumn
-)
+from rich.progress import Progress, ProgressColumn, SpinnerColumn, TextColumn
 from rich.text import Text
 from rich.theme import Theme
 

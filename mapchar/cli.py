@@ -95,9 +95,7 @@ def generate(
         """Start progress bar thread."""
         nonlocal start_time
 
-        log.info(
-            datetime.now().strftime("[bold]Started at %H:%M on %a, %b %d %Y.[/]")
-        )
+        log.info(datetime.now().strftime("[bold]Started at %H:%M on %a, %b %d %Y.[/]"))
 
         if show_progress_bar and not progress_thread.is_alive():
             progress_thread.start()
