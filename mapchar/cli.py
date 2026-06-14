@@ -531,12 +531,12 @@ def print_info(
     """Displays generation statistics and information before execution."""
     if compressor is None:
         log.info(
-            f"\nMapchar will generate [bold rgb(255,120,0)]{s_words:,} entries[/] "
+            f"Mapchar will generate [bold rgb(255,120,0)]{s_words:,} entries[/] "
             f"({estimated_size})."
         )
     else:
         log.info(
-            f"\nMapchar will generate [bold rgb(255,120,0)]{s_words:,} entries[/] "
+            f"Mapchar will generate [bold rgb(255,120,0)]{s_words:,} entries[/] "
             f"({estimated_size} [underline]uncompressed[/], {compressor})."
         )
 
@@ -618,7 +618,7 @@ def main() -> int:
     nodes: list[list[Any]] = []
     tokens_list: list[list[Any]] = []
 
-    log.info(f"[bold rgb(255,120,0)]Mapchar[/] @ v{__version__}")
+    log.info(f"[bold rgb(255,120,0)]Mapchar[/] @ v{__version__}\n")
 
     if args.expr_file is not None:
         try:
