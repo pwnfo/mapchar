@@ -5,7 +5,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import IO, Any, Literal
 
-from fuse.logger import log
+from mapchar.logger import log
 
 CompressionFormat = Literal["gzip", "bzip2", "lzma"]
 
@@ -22,12 +22,6 @@ COMPRESSION_DEFAULT_LEVELS: dict[CompressionFormat, int] = {
     "bzip2": 9,
     "lzma": 6,
 }
-
-# COMPRESSION_ALIASES = {
-#     "gz": "gzip",
-#     "bz2": "bzip2",
-#     "xz": "lzma",
-# }
 
 
 def get_compression_extension(format_name: CompressionFormat) -> str:

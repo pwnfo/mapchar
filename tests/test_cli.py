@@ -1,4 +1,4 @@
-from fuse.cli import GenerateOptions, format_expression
+from mapchar.cli import GenerateOptions, format_expression
 
 
 class TestFormatExpression:

@@ -1,11 +1,11 @@
 import pytest
 
-from fuse.generator import (
+from mapchar.generator import (
     BindDefNode,
     BindRefNode,
     ExprError,
     FileNode,
-    FuseGenerator,
+    MapcharGenerator,
     Node,
 )
 
@@ -151,7 +151,7 @@ class TestFileNode:
 
 class TestTokenize:
     def setup_method(self):
-        self.gen = FuseGenerator()
+        self.gen = MapcharGenerator()
 
     def test_plain_literal(self):
         tokens = self.gen.tokenize("abc")[0]
@@ -256,7 +256,7 @@ class TestTokenize:
 
 class TestParse:
     def setup_method(self):
-        self.gen = FuseGenerator()
+        self.gen = MapcharGenerator()
 
     def test_literal_nodes(self):
         tokens = self.gen.tokenize("abc")
@@ -317,7 +317,7 @@ class TestParse:
 
 class TestGenerate:
     def setup_method(self):
-        self.gen = FuseGenerator()
+        self.gen = MapcharGenerator()
 
     def _gen(self, expression, files=None, **kwargs):
         tokens = self.gen.tokenize(expression)
@@ -401,7 +401,7 @@ class TestGenerate:
 
 class TestStats:
     def setup_method(self):
-        self.gen = FuseGenerator()
+        self.gen = MapcharGenerator()
 
     def _stats(self, expression, files=None, **kwargs):
         tokens = self.gen.tokenize(expression)
@@ -448,7 +448,7 @@ class TestStats:
 
 class TestGetWordAtIndex:
     def setup_method(self):
-        self.gen = FuseGenerator()
+        self.gen = MapcharGenerator()
 
     def test_first_word(self):
         tokens = self.gen.tokenize("[ab][12]")
@@ -475,7 +475,7 @@ class TestGetWordAtIndex:
 
 class TestCalculateSkippedCount:
     def setup_method(self):
-        self.gen = FuseGenerator()
+        self.gen = MapcharGenerator()
 
     def test_first_word_skips_zero(self):
         tokens = self.gen.tokenize("[ab][12]")
@@ -498,7 +498,7 @@ class TestCalculateSkippedCount:
 
 class TestBinding:
     def setup_method(self):
-        self.gen = FuseGenerator()
+        self.gen = MapcharGenerator()
 
     def _gen(self, expression, **kwargs):
         tokens = self.gen.tokenize(expression)

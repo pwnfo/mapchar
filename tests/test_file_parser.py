@@ -2,12 +2,12 @@ from pathlib import Path
 
 import pytest
 
-from fuse.file_parser import InvalidSyntaxError, process_expr_file
+from mapchar.file_parser import InvalidSyntaxError, process_expr_file
 
 
 class TestProcessExprFile:
-    def test_simple_expressions(self, fuse_expr_file):
-        results = list(process_expr_file(str(fuse_expr_file)))
+    def test_simple_expressions(self, mapchar_expr_file):
+        results = list(process_expr_file(str(mapchar_expr_file)))
         assert len(results) == 2
         assert results[0] == ("[abc]{2}", [])
         assert results[1] == ("[12]{1}", [])
@@ -26,8 +26,8 @@ class TestProcessExprFile:
         results = list(process_expr_file(str(fp)))
         assert len(results) == 2
 
-    def test_define_expansion(self, fuse_expr_file_with_define):
-        results = list(process_expr_file(str(fuse_expr_file_with_define)))
+    def test_define_expansion(self, mapchar_expr_file_with_define):
+        results = list(process_expr_file(str(mapchar_expr_file_with_define)))
         assert len(results) == 1
         expr, files = results[0]
         assert "[0123456789]" in expr
@@ -50,8 +50,8 @@ class TestProcessExprFile:
         with pytest.raises(InvalidSyntaxError, match="cannot contain"):
             list(process_expr_file(str(fp)))
 
-    def test_file_include(self, fuse_expr_file_with_file_ref, wordlist_file):
-        results = list(process_expr_file(str(fuse_expr_file_with_file_ref)))
+    def test_file_include(self, mapchar_expr_file_with_file_ref, wordlist_file):
+        results = list(process_expr_file(str(mapchar_expr_file_with_file_ref)))
         assert len(results) == 1
         expr, files = results[0]
         assert len(files) == 1

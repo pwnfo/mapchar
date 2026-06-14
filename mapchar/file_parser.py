@@ -2,8 +2,8 @@ import re
 from collections.abc import Iterator
 from pathlib import Path
 
-from fuse.exceptions import InvalidSyntaxError
-from fuse.utils.files import fuse_open
+from mapchar.exceptions import InvalidSyntaxError
+from mapchar.utils.files import mapchar_open
 
 
 def process_expr_file(
@@ -13,7 +13,7 @@ def process_expr_file(
     Yields the lines of the expression file (`filepath`) to be processed
     with included files. Handles keywords (`%define` and `%include`).
     """
-    with fuse_open(filepath, "r", encoding="utf-8") as fp:
+    with mapchar_open(filepath, "r", encoding="utf-8") as fp:
         if fp is None:
             yield None
             return

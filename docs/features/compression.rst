@@ -1,20 +1,20 @@
 Compression Output
 =====================
 
-Fuse supports on-the-fly compression when writing output files. This is useful for large wordlists where disk space and I/O efficiency matter.
+Mapchar supports on-the-fly compression when writing output files. This is useful for large wordlists where disk space and I/O efficiency matter.
 
 Use the ``-z`` (or ``--compress``) flag together with ``-o``:
 
 .. code-block:: bash
 
    # Gzip compression (balanced speed/ratio)
-   $ fuse '/l{5}' -z gzip -o wordlist.txt.gz
+   $ mapchar '/l{5}' -z gzip -o wordlist.txt.gz
 
    # LZMA compression (best ratio, slower)
-   $ fuse '/l{5}' -z lzma -o wordlist.txt.xz
+   $ mapchar '/l{5}' -z lzma -o wordlist.txt.xz
 
    # Bzip2 compression (middle ground)
-   $ fuse '/l{5}' -z bzip2 -o wordlist.txt.bz2
+   $ mapchar '/l{5}' -z bzip2 -o wordlist.txt.bz2
 
 Compression is applied during generation:
 
@@ -47,10 +47,10 @@ This value defines how many bytes are buffered before being flushed to the outpu
 .. code-block:: bash
 
    # Optimized for compression efficiency
-   $ fuse '/l{6}' -z lzma -k 2MB -o output.txt.xz
+   $ mapchar '/l{6}' -z lzma -k 2MB -o output.txt.xz
 
    # Optimized for low memory environments
-   $ fuse '/l{6}' -z gzip -k 128KB -o output.txt.gz
+   $ mapchar '/l{6}' -z gzip -k 128KB -o output.txt.gz
 
 **Important**: Compression algorithms benefit from larger contiguous data blocks.  
 Using a very low ``--flush-threshold`` can significantly degrade compression ratio and overall performance.
@@ -84,13 +84,13 @@ The accepted range depends on the selected format:
 .. code-block:: bash
 
    # Faster compression (lower ratio)
-   $ fuse '/l{5}' -z gzip -l 1 -o fast.txt.gz
+   $ mapchar '/l{5}' -z gzip -l 1 -o fast.txt.gz
 
    # Maximum compression
-   $ fuse '/l{5}' -z bzip2 -l 9 -o compact.txt.bz2
+   $ mapchar '/l{5}' -z bzip2 -l 9 -o compact.txt.bz2
 
    # LZMA high compression preset
-   $ fuse '/l{5}' -z lzma -l 9 -o ultra.txt.xz
+   $ mapchar '/l{5}' -z lzma -l 9 -o ultra.txt.xz
 
 If ``--compresslevel`` is not specified, each algorithm uses its own default:
 

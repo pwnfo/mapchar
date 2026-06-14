@@ -3,16 +3,16 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import IO, Any
 
-from fuse.compression import (
+from mapchar.compression import (
     CompressionFormat,
     compressed_file_writer,
     ensure_compression_extension,
 )
-from fuse.logger import log
+from mapchar.logger import log
 
 
 @contextmanager
-def fuse_open(
+def mapchar_open(
     file: str | None,
     *args: Any,
     compression: CompressionFormat | None = None,

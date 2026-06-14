@@ -3,7 +3,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath(".."))
 
-project = "Fuse"
+project = "Mapchar"
 copyright = "2026, Ryan R. <pwnfo@proton.me>"
 author = "Ryan R."
 release = "7.0.0"
@@ -22,7 +22,7 @@ html_static_path = ["_static"]
 html_theme_options = {
     "light_logo": "icon.png",
     "dark_logo": "icon.png",
-    "source_repository": "https://github.com/pwnfo/fuse",
+    "source_repository": "https://github.com/pwnfo/mapchar",
     "source_branch": "main",
     "source_directory": "docs/",
 }

@@ -17,7 +17,7 @@ class PlainRichHandler(RichHandler):
         return Text(record.levelname)
 
 
-class FuseRichHandler(PlainRichHandler):
+class MapcharRichHandler(PlainRichHandler):
     """Writes warnings and errors to `sys.stderr`"""
 
     def emit(self, record: logging.LogRecord) -> None:
@@ -29,7 +29,7 @@ class FuseRichHandler(PlainRichHandler):
         super().emit(record)
 
 
-class FuseFormatter(logging.Formatter):
+class MapcharFormatter(logging.Formatter):
     """Uses the 'Warning:' prefix"""
 
     def format(self, record: logging.LogRecord) -> str:
@@ -43,7 +43,7 @@ class FuseFormatter(logging.Formatter):
 def setup_logger() -> logging.Logger:
     log = logging.getLogger(__name__)
 
-    handler = FuseRichHandler(
+    handler = MapcharRichHandler(
         markup=True,
         rich_tracebacks=True,
         show_time=False,
@@ -52,7 +52,7 @@ def setup_logger() -> logging.Logger:
         keywords=[],
     )
 
-    handler.setFormatter(FuseFormatter())
+    handler.setFormatter(MapcharFormatter())
 
     log.setLevel(logging.INFO)
     log.addHandler(handler)

@@ -1,18 +1,18 @@
 [tool.poetry]
-name = "fuse-generator"
-version = "7.0.1"
+name = "mapchar"
+version = "7.0.2"
 description = "Generate wordlists using pattern logic and expressions."
 authors = ["Ryan R. <pwnfo@proton.me>"]
 readme = "README.md"
 license = "MIT"
-packages = [{ include = "fuse" }]
+packages = [{ include = "mapchar" }]
 
 [tool.poetry.dependencies]
 python = ">=3.10"
 rich = "^15.0.0"
 
 [tool.poetry.scripts]
-fuse = "fuse.cli:main"
+mapchar = "mapchar.cli:main"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.20.0"

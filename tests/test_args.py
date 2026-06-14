@@ -1,4 +1,4 @@
-from fuse.args import create_parser
+from mapchar.args import create_parser
 
 
 class TestCreateParser:

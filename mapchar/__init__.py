@@ -26,13 +26,12 @@ from .__version__ import __version__
 
 __author__ = "Ryan R. <pwnfo@proton.me>"
 __description__ = "Generate wordlists using pattern logic and expressions."
-__name__ = "fuse"
+__name__ = "mapchar"
 __credits__ = f"Developed by {__author__}"
-__url__ = "https://github.com/pwnfo/fuse"
+__url__ = "https://github.com/pwnfo/mapchar"
 
-FUSE_BANNER = rf""" [rgb(255,120,0)] ___  _ _  __  ___ [/rgb(255,120,0)]
- [rgb(255,140,0)]| __|| | |/ _|| __|[/rgb(255,140,0)]
- [rgb(255,165,40)]| _| | U |\_ \| _| [/rgb(255,165,40)]
- [rgb(255,190,90)]|_|  |___||__/|___|[/rgb(255,190,90)]
-                        [underline rgb(255,200,120)]v{__version__}[/]
-"""
+# MAPCHAR_BANNER = rf""" [rgb(255,120,0)] _____ _____ _____ _____ _____ _____ _____[/]
+#  [rgb(255,140,0)]|     |  _  |  _  |     |  |  |  _  | __  |[/]
+#  [rgb(255,165,40)]| | | |     |   __|   --|     |     |    -|[/]
+#  [rgb(255,190,90)]|_|_|_|__|__|__|  |_____|__|__|__|__|__|__|[/]  [bold rgb(255,140,0)]v{__version__}[/]
+# """

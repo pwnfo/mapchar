@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from rich.text import Text
 
-from fuse.console import FuseETAColumn, SpeedColumn, get_progress
+from mapchar.console import MapcharETAColumn, SpeedColumn, get_progress
 
 
 class DummyTask:
@@ -12,9 +12,9 @@ class DummyTask:
         self.speed = speed
 
 
-class TestFuseETAColumn:
+class TestMapcharETAColumn:
     def test_render_none(self):
-        col = FuseETAColumn()
+        col = MapcharETAColumn()
         task = DummyTask(time_remaining=None)
         res = col.render(task)
         assert isinstance(res, Text)
@@ -22,21 +22,21 @@ class TestFuseETAColumn:
         assert res.style == "accent2"
 
     def test_render_zero(self):
-        col = FuseETAColumn()
+        col = MapcharETAColumn()
         task = DummyTask(time_remaining=0)
         res = col.render(task)
         assert res.plain == "00:00"
         assert res.style == "accent_dim"
 
     def test_render_minutes_and_seconds(self):
-        col = FuseETAColumn()
+        col = MapcharETAColumn()
         task = DummyTask(time_remaining=65)
         res = col.render(task)
         assert res.plain == "01:05"
         assert res.style == "accent_dim"
 
     def test_render_hours(self):
-        col = FuseETAColumn()
+        col = MapcharETAColumn()
         task = DummyTask(time_remaining=3600)
         res = col.render(task)
         assert res.plain == "60:00"
@@ -66,14 +66,14 @@ class DummyValue:
 
 
 class TestGetProgress:
-    @patch("fuse.console.sleep")
+    @patch("mapchar.console.sleep")
     def test_get_progress_completes(self, mock_sleep):
         e = Event()
         r = DummyValue(100)
         get_progress(e, r, total=100)
         assert mock_sleep.call_count == 0
 
-    @patch("fuse.console.sleep")
+    @patch("mapchar.console.sleep")
     def test_get_progress_updates(self, mock_sleep):
         e = Event()
         r = DummyValue(0)
@@ -86,7 +86,7 @@ class TestGetProgress:
         get_progress(e, r, total=100)
         assert mock_sleep.call_count > 0
 
-    @patch("fuse.console.sleep")
+    @patch("mapchar.console.sleep")
     def test_get_progress_keyboard_interrupt(self, mock_sleep):
         e = Event()
         r = DummyValue(50)

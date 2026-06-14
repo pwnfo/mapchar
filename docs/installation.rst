@@ -7,11 +7,11 @@ Using pipx
 ----------
 .. code-block:: bash
 
-   pipx install fuse-generator
+   pipx install mapchar
 
 *Note: You may use pip in place of pipx.*
 
-*Note: The PyPI package was renamed from 'fuse-tool' to 'fuse-generator' starting in version 4.0.0.*
+*Note: The PyPI package was renamed from 'fuse-generator' to 'mapchar' starting in version 7.0.2.*
 
 From Source
 -----------
@@ -19,6 +19,6 @@ Clone the repository directly from GitHub:
 
 .. code-block:: bash
 
-   git clone https://github.com/pwnfo/fuse.git
-   cd fuse
+   git clone https://github.com/pwnfo/mapchar.git
+   cd mapchar
    pip install .

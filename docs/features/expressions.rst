@@ -1,7 +1,7 @@
 Expressions & Classes
 =====================
 
-At the core of Fuse is the expression parser. 
+At the core of Mapchar is the expression parser. 
 
 Literal Characters
 ------------------
@@ -9,7 +9,7 @@ Literal characters produce themselves. For example, ``admin`` literally yields `
 
 .. code-block:: bash
    
-   $ fuse 'admin/d'
+   $ mapchar 'admin/d'
    admin0
    admin1
    ...
@@ -17,7 +17,7 @@ Literal characters produce themselves. For example, ``admin`` literally yields `
 
 Built-in Character Classes
 --------------------------
-To easily reference standard character sets, Fuse provides built-in tokens initialized with a forward slash ``/``.
+To easily reference standard character sets, Mapchar provides built-in tokens initialized with a forward slash ``/``.
 
 ========= ======================== =====================================
 Symbol    Meaning                  Example / Resulting Output          
@@ -45,7 +45,7 @@ Built-in tokens naturally expand *inside* brackets.
 
 .. code-block:: bash
 
-   $ fuse '[/d/a_]'
+   $ mapchar '[/d/a_]'
    # Yields all digits, lowercase letters, and underscores: 0, 1..., a, b..., _
 
 **Unions (Alternatives)**
@@ -53,7 +53,7 @@ Use the pipe character ``|`` to separate full-word alternatives inside brackets.
 
 .. code-block:: bash
    
-   $ fuse '[admin|root|123]'
+   $ mapchar '[admin|root|123]'
    admin
    root
    123
@@ -66,7 +66,7 @@ If you need an entire word sequence to be treated strictly as a single permutati
 
 .. code-block:: bash
 
-   $ fuse '(admin){3}'
+   $ mapchar '(admin){3}'
    adminadminadmin
 
 Quantifiers
@@ -81,13 +81,13 @@ Examples:
 
 .. code-block:: bash
 
-   $ fuse '[XYZ]{3}'
+   $ mapchar '[XYZ]{3}'
    # Yields: XXX, XXY, XXZ, XYX... (27 permutations)
 
-   $ fuse '[XYZ]{1,2}'
+   $ mapchar '[XYZ]{1,2}'
    # Yields: X, Y, Z, XX, XY, XZ... (12 permutations)
 
-   $ fuse '(admin)?[12]'
+   $ mapchar '(admin)?[12]'
    # Yields: 1, 2, admin1, admin2
 
 Expression Alternation
@@ -96,7 +96,7 @@ You can combine multiple independent expressions in a single line or template us
 
 .. code-block:: bash
 
-   $ fuse 'admin/d{2}||guest/d{2}'
+   $ mapchar 'admin/d{2}||guest/d{2}'
    # Yields: admin00, admin01... guest98, guest99...
 
 Unlike the single pipe ``|`` inside brackets (which works at the character/class level), the double pipe ``||`` operates at the top level of the generator, effectively chaining full expressions together.
@@ -107,7 +107,7 @@ Need to output a reserved token like ``/d``, ``[``, ``}``, or ``^``? Escape it u
 
 .. code-block:: bash
 
-   $ fuse '\/d/d'
+   $ mapchar '\/d/d'
    /d0
    /d1
    ...

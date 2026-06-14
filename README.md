@@ -1,6 +1,6 @@
 <p align="center">
   <br>
-  <a href="https://github.com/pwnfo/fuse" target="_blank"><img src="images/icon.png" width="30%" alt="fuse"/></a>
+  <a href="https://github.com/pwnfo/mapchar" target="_blank"><img src="images/icon.png" width="20%" alt="mapchar"/></a>
   <br>
   <span>Generate wordlists using pattern logic and expressions</span>
   <br>
@@ -16,6 +16,11 @@
   <a href="#contributing">Contributing</a>
 </p>
 
+> [!NOTE]
+> **This project was renamed from `fuse` / `fuse-generator` to `mapchar`** starting from version 7.0.2.
+> The PyPI package, CLI command, and Python package name have all changed accordingly.
+> If you were using the old name, please update your installs and imports.
+
 <p align="center">
 <img width="80%" src="images/demo.png" alt="demo"/>
 </p>
@@ -27,15 +32,15 @@
 
 | Method | Notes |
 | - | - |
-| `pipx install fuse-generator` | `pip` may be used in place of `pipx` |
-| `git clone https://github.com/pwnfo/fuse.git && cd fuse && pip install .` | Clone and install directly from GitHub |
+| `pipx install mapchar` | `pip` may be used in place of `pipx` |
+| `git clone https://github.com/pwnfo/mapchar.git && cd mapchar && pip install .` | Clone and install directly from GitHub |
 
 ## Documentation
 
-For a complete guide, feature explanations, and advanced examples, please visit [the documentation](https://fuse-generator.readthedocs.io/).
+For a complete guide, feature explanations, and advanced examples, please visit [the documentation](https://mapchar.readthedocs.io/).
 
 <p align="center">
-  <a href="https://fuse-generator.readthedocs.io/" target="_blank">
+  <a href="https://mapchar.readthedocs.io/" target="_blank">
     <img src="images/readthedocs.svg" width="60%" alt="ReadTheDocs Documentation"/>
   </a>
 </p>
@@ -45,12 +50,12 @@ For a complete guide, feature explanations, and advanced examples, please visit 
 
 To generate a wordlist from a simple expression:
 ```bash
-fuse '/l{2,4}'
+mapchar '/l{2,4}'
 ```
 
 To combine files with generators:
 ```bash
-fuse '^:^' names.txt pass.txt
+mapchar '^:^' names.txt pass.txt
 ```
 
 Outputs can be manipulated, filtered, and saved.
@@ -94,7 +99,7 @@ Output Options:
 
 Example:
 ```bash
-$ fuse '/l{2,3}'
+$ mapchar '/l{2,3}'
 # output: aa, ab, ac, ..., ZY, ZZ
 ```
 
@@ -122,14 +127,14 @@ Example: `/l/l` generates all two-letter combinations (upper and lower case).
 * Use `|` to separate full-word alternatives inside classes:
   * `[admin|root|123]` inserts `admin` OR `root` OR `123` at that point.
 * Use `||` to separate **top-level expressions**:
-  * `fuse 'admin/d||guest/d'` chains two independent patterns.
+  * `mapchar 'admin/d||guest/d'` chains two independent patterns.
 
 ### Statistics
 
 You can analyze a pattern before generating it using the `-S/--stats` flag. This shows token counts, estimated size, and range filtering details.
 
 ```bash
-fuse -S '/l{3}||/d{3}'
+mapchar -S '/l{3}||/d{3}'
 ```
 
 ### Quantifiers
@@ -140,10 +145,10 @@ fuse -S '/l{3}||/d{3}'
 
 Examples:
 ```bash
-$ fuse '[XYZ]{3}'         # XXX, XXY, ..., ZZZ
-$ fuse '[XYZ]{2,5}'       # XY, XZ, ..., XYZXY
-$ fuse 'Ryan?/d'          # Rya0, Rya1, ..., Ryan9
-$ fuse '[XYZ]?Ryan'       # Ryan, XRyan, YRyan, ZRyan
+$ mapchar '[XYZ]{3}'         # XXX, XXY, ..., ZZZ
+$ mapchar '[XYZ]{2,5}'       # XY, XZ, ..., XYZXY
+$ mapchar 'Ryan?/d'          # Rya0, Rya1, ..., Ryan9
+$ mapchar '[XYZ]?Ryan'       # Ryan, XRyan, YRyan, ZRyan
 ```
 
 ### Numeric ranges
@@ -158,10 +163,10 @@ These numeric ranges can be used in any position of an expression.
 
 Use `^` in an expression as a placeholder for the next file argument. Each `^` consumes one file and iterates over its lines:
 ```bash
-$ fuse '^/d' names.txt
+$ mapchar '^/d' names.txt
 # output: Bob0, Bob1, ..., Ana0, Ana1, ...
 
-$ fuse '^-^' names.txt years.txt
+$ mapchar '^-^' names.txt years.txt
 # output: Bob-1990, Ana-1991, Ryan-1992, ...
 ```
 
@@ -173,50 +178,50 @@ Use `<@name=expr>` to evaluate an expression **once per output line** and store 
 Unlike concatenation, this introduces a dependency, so no cartesian product is created between the definition and its references.
 
 ```bash
-$ fuse '<@d=/d>-<@d>'
+$ mapchar '<@d=/d>-<@d>'
 # output: 0-0, 1-1, ..., 9-9
 
-$ fuse '<@x=^>:<@x>' words.txt
+$ mapchar '<@x=^>:<@x>' words.txt
 # output: foo:foo, bar:bar, ...
 
-$ fuse '<@n=/d{2}>_<@n>'
+$ mapchar '<@n=/d{2}>_<@n>'
 # output: 00_00, 01_01, ..., 99_99
 ```
 
 ### Compression
 
-Fuse supports on-the-fly compression when writing output files.
+Mapchar supports on-the-fly compression when writing output files.
 
 ```bash
 # gzip (fast, balanced)
-fuse '/l{5}' -z gzip -o wordlist.txt.gz
+mapchar '/l{5}' -z gzip -o wordlist.txt.gz
 
 # lzma (best compression)
-fuse '/l{5}' -z lzma -o wordlist.txt.xz
+mapchar '/l{5}' -z lzma -o wordlist.txt.xz
 
 # bzip2 (middle ground)
-fuse '/l{5}' -z bzip2 -o wordlist.txt.bz2
+mapchar '/l{5}' -z bzip2 -o wordlist.txt.bz2
 ```
 
 ### Escaping special characters
 
 Use `\` to escape special characters.
 ```bash
-$ fuse '\/d/d'
+$ mapchar '\/d/d'
 # output: /d/0, /d/1, ..., /d/9
 ```
 
 ## Contributing
 
-We welcome contributions to Fuse! Whether it's adding new features, improving documentation, or fixing bugs, your help is appreciated. 
-Feel free to open an issue or submit a pull request on our GitHub repository at `pwnfo/fuse`.
+We welcome contributions to Mapchar! Whether it's adding new features, improving documentation, or fixing bugs, your help is appreciated. 
+Feel free to open an issue or submit a pull request on our GitHub repository at `pwnfo/mapchar`.
 
 ## Star History
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=pwnfo/fuse&type=Date&theme=dark" />
-  <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=pwnfo/fuse&type=Date" />
-  <img alt="Fuse Project Star History Chart" src="https://api.star-history.com/svg?repos=pwnfo/fuse&type=Date" />
+  <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=pwnfo/mapchar&type=Date&theme=dark" />
+  <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=pwnfo/mapchar&type=Date" />
+  <img alt="Mapchar Project Star History Chart" src="https://api.star-history.com/svg?repos=pwnfo/mapchar&type=Date" />
 </picture>
 
 ## License

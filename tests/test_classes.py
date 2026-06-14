@@ -1,4 +1,4 @@
-from fuse.utils.classes import CHAR_CLASSES, pattern_repl
+from mapchar.utils.classes import CHAR_CLASSES, pattern_repl
 
 
 class TestCharClasses:

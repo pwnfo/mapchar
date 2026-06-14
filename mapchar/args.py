@@ -2,18 +2,18 @@ import argparse
 import sys
 from typing import Never
 
-from fuse import __credits__, __description__, __version__
+from mapchar import __credits__, __description__, __version__
 
 CLI_EXAMPLES = """
 Examples:
-  fuse '/A{4}'
-  fuse '/l{4}#[0-8:2]' -w 2 -o words.txt
-  fuse -f patterns.fuse
-  fuse '/H{6}' -z gzip -k 1MB -l 7 -o hashes.txt.gz
+  mapchar '/A{4}'
+  mapchar '/l{4}#[0-8:2]' -w 2 -o words.txt
+  mapchar -f patterns.mapc
+  mapchar '/H{6}' -z gzip -k 1MB -l 7 -o hashes.txt.gz
 """
 
 
-class FuseParser(argparse.ArgumentParser):
+class MapcharParser(argparse.ArgumentParser):
     """Format `argparse.ArgumentParser` error message"""
 
     def error(self, message: str) -> Never:
@@ -22,15 +22,18 @@ class FuseParser(argparse.ArgumentParser):
         sys.exit(1)
 
 
-def create_parser(prog: str = "fuse") -> FuseParser:
+def create_parser(prog: str = "mapchar") -> MapcharParser:
     """Create the main CLI argument parser"""
-    epilog = (
-        CLI_EXAMPLES
-        + "\n"
-        + __credits__
-        + "\nMore information and examples:\n  https://fuse-generator.readthedocs.io/"
+    epilog = "\n".join(
+        (
+            CLI_EXAMPLES,
+            "",
+            __credits__,
+            "More information and examples:",
+            "  https://mapchar.readthedocs.io/",
+        )
     )
-    parser = FuseParser(
+    parser = MapcharParser(
         prog=prog,
         add_help=False,
         usage=f"{prog} [options] <pattern> [<files...>]",
@@ -52,7 +55,7 @@ def create_parser(prog: str = "fuse") -> FuseParser:
         "-v",
         "--version",
         action="version",
-        version=f"Fuse v{__version__} (Python {sys.version_info.major}.{sys.version_info.minor})",
+        version=f"Mapchar v{__version__} (Python {sys.version_info.major}.{sys.version_info.minor})",
         help="show version information and exit",
     )
     general_group.add_argument(

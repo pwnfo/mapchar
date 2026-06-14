@@ -2,10 +2,10 @@ import bz2
 import gzip
 import lzma
 
-from fuse.compression import (
+from mapchar.compression import (
     get_compression_extension,
 )
-from fuse.utils.files import fuse_open
+from mapchar.utils.files import mapchar_open
 
 
 class TestCompressionExtensions:
@@ -24,7 +24,7 @@ class TestCompressedFileWriter:
         filepath = str(tmp_path / "test.txt")
         content = "hello world\nfoo bar\n"
 
-        with fuse_open(filepath, "a", encoding="utf-8", compression="gzip") as fp:
+        with mapchar_open(filepath, "a", encoding="utf-8", compression="gzip") as fp:
             assert fp is not None
             fp.write(content)
 
@@ -38,7 +38,7 @@ class TestCompressedFileWriter:
         filepath = str(tmp_path / "test.txt")
         content = "hello world\nfoo bar\n"
 
-        with fuse_open(filepath, "a", encoding="utf-8", compression="bzip2") as fp:
+        with mapchar_open(filepath, "a", encoding="utf-8", compression="bzip2") as fp:
             assert fp is not None
             fp.write(content)
 
@@ -52,7 +52,7 @@ class TestCompressedFileWriter:
         filepath = str(tmp_path / "test.txt")
         content = "hello world\nfoo bar\n"
 
-        with fuse_open(filepath, "a", encoding="utf-8", compression="lzma") as fp:
+        with mapchar_open(filepath, "a", encoding="utf-8", compression="lzma") as fp:
             assert fp is not None
             fp.write(content)
 
@@ -65,18 +65,18 @@ class TestCompressedFileWriter:
     def test_gzip_file_exists(self, tmp_path):
         filepath = str(tmp_path / "test.txt")
 
-        with fuse_open(filepath, "a", encoding="utf-8", compression="gzip") as fp:
+        with mapchar_open(filepath, "a", encoding="utf-8", compression="gzip") as fp:
             assert fp is not None
             fp.write("first\n")
 
-        with fuse_open(filepath, "a", encoding="utf-8", compression="gzip") as fp:
+        with mapchar_open(filepath, "a", encoding="utf-8", compression="gzip") as fp:
             assert fp is None
 
     def test_no_compression(self, tmp_path):
         filepath = str(tmp_path / "test.txt")
         content = "hello world\n"
 
-        with fuse_open(filepath, "a", encoding="utf-8") as fp:
+        with mapchar_open(filepath, "a", encoding="utf-8") as fp:
             assert fp is not None
             fp.write(content)
 
@@ -87,7 +87,7 @@ class TestCompressedFileWriter:
             assert f.read() == content
 
     def test_stdout_with_compression(self):
-        with fuse_open(None, "a", encoding="utf-8", compression="gzip") as fp:
+        with mapchar_open(None, "a", encoding="utf-8", compression="gzip") as fp:
             import sys
 
             assert fp is sys.stdout
@@ -100,7 +100,9 @@ class TestCompressedFileWriter:
         filepath = str(ro_dir / "test.txt")
 
         try:
-            with fuse_open(filepath, "a", encoding="utf-8", compression="gzip") as fp:
+            with mapchar_open(
+                filepath, "a", encoding="utf-8", compression="gzip"
+            ) as fp:
                 assert fp is None or fp is not None
         finally:
             ro_dir.chmod(0o755)

@@ -1,8 +1,8 @@
 from collections.abc import Generator
 from itertools import product
 
-from fuse.generator.exceptions import ExprError
-from fuse.utils.files import fuse_open
+from mapchar.generator.exceptions import ExprError
+from mapchar.utils.files import mapchar_open
 
 
 class BindDefNode:
@@ -306,7 +306,7 @@ class FileNode(Node):
         out: list[str] = []
         for path in self.base:
             try:
-                with fuse_open(path, "r", encoding="utf-8", errors="ignore") as fp:
+                with mapchar_open(path, "r", encoding="utf-8", errors="ignore") as fp:
                     if not fp:
                         raise OSError
                     out.extend(ln.rstrip("\n\r") for ln in fp)

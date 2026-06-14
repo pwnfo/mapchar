@@ -10,11 +10,12 @@ from rich.progress import (
     ProgressColumn,
     SpinnerColumn,
     TextColumn,
+    BarColumn
 )
 from rich.text import Text
 from rich.theme import Theme
 
-from fuse.utils.formatters import format_size
+from mapchar.utils.formatters import format_size
 
 # -------------------------------------
 # progress bar configuration constants.
@@ -30,7 +31,7 @@ _THEME = Theme(
 )
 
 
-class FuseETAColumn(ProgressColumn):
+class MapcharETAColumn(ProgressColumn):
     """ETA in orange"""
 
     def render(self, task: Any) -> Text:
@@ -56,15 +57,16 @@ def get_progress(e: Event, r: Any, total: int = 100) -> None:
     console = Console(theme=_THEME)
 
     with Progress(
-        SpinnerColumn(style="accent_dim", spinner_name="dots"),
+        SpinnerColumn(style="accent_dim", spinner_name="point"),
+        # BarColumn(bar_width=15, complete_style="accent", pulse_style="accent2"),
         TextColumn("[accent2]{task.percentage:>3.0f}%[/]"),
         TextColumn("[accent]{task.fields[done]} / {task.fields[total_fmt]}[/]"),
         SpeedColumn(),
-        FuseETAColumn(),
+        MapcharETAColumn(),
         console=console,
         transient=True,
         expand=False,
-        refresh_per_second=6,
+        refresh_per_second=10,
     ) as progress:
         task_id = progress.add_task(
             "",

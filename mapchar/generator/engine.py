@@ -2,12 +2,12 @@ import re
 from collections.abc import Generator
 from typing import Any
 
-from fuse.generator.exceptions import ExprError
-from fuse.generator.nodes import BindDefNode, BindRefNode, FileNode, Node
-from fuse.utils.classes import pattern_repl
+from mapchar.generator.exceptions import ExprError
+from mapchar.generator.nodes import BindDefNode, BindRefNode, FileNode, Node
+from mapchar.utils.classes import pattern_repl
 
 
-class FuseGenerator:
+class MapcharGenerator:
     BRACES_RE = re.compile(r"\{(\d+)(?:\s*,\s*(\d+))?\}")
     RANGE_RE = re.compile(r"\s*([0-9]+)\s*-\s*([0-9]+)\s*(?::\s*([+-]?\d+)\s*)?$")
 

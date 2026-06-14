@@ -1,7 +1,7 @@
 Ranges & Placeholders
 =====================
 
-In addition to static characters, Fuse enables dynamically injecting external sources and numerical ranges into expressions.
+In addition to static characters, Mapchar enables dynamically injecting external sources and numerical ranges into expressions.
 
 Numeric Ranges
 --------------
@@ -16,7 +16,7 @@ Examples:
 
 .. code-block:: bash
 
-   $ fuse 'user#[1-10]'
+   $ mapchar 'user#[1-10]'
    user1
    user2
    ...
@@ -24,11 +24,11 @@ Examples:
 
 File Placeholders
 -----------------
-You can inject contents from external wordlists directly into a Fuse generation using the caret placeholder ``^``. Each caret consumes one sequential file argument passed to the CLI.
+You can inject contents from external wordlists directly into a Mapchar generation using the caret placeholder ``^``. Each caret consumes one sequential file argument passed to the CLI.
 
 .. code-block:: bash
 
-   $ fuse '^-^' firstnames.txt lastnames.txt
+   $ mapchar '^-^' firstnames.txt lastnames.txt
    Bob-Smith
    Bob-Doe
    Ana-Smith
@@ -39,17 +39,17 @@ Remember that placeholders and ranges are native tokens! You can apply `Quantifi
 
 .. code-block:: bash
 
-   $ fuse '^{2}' colors.txt
+   $ mapchar '^{2}' colors.txt
    RedRed
    RedBlue
    ...
 
-   $ fuse '#[1-3]{3}'
+   $ mapchar '#[1-3]{3}'
    111
    112
    ...
 
-Fuse calculates permutations gracefully, properly nesting iterations. Since files are parsed as native tokens, memory usage is kept extremely low, reading the file securely without caching the entire permutations tree in RAM.
+Mapchar calculates permutations gracefully, properly nesting iterations. Since files are parsed as native tokens, memory usage is kept extremely low, reading the file securely without caching the entire permutations tree in RAM.
 
 Inline Macros
 -------------
@@ -57,7 +57,7 @@ Don't want to create an external file just for a small set of words? You can sup
 
 .. code-block:: bash
 
-   $ fuse 'login-^-^' '//[user|admin]' '//[1|2]'
+   $ mapchar 'login-^-^' '//[user|admin]' '//[1|2]'
    login-user-1
    login-user-2
    login-admin-1
