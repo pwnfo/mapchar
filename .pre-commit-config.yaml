@@ -3,7 +3,7 @@ repos:
     rev: v2.1.0
     hooks:
       - id: mypy
-        files: ^fuse/
+        files: ^mapchar/
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.15
