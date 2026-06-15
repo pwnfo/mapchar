@@ -27,7 +27,7 @@ class TestCharClasses:
         assert CHAR_CLASSES["o"] == "01234567"
 
     def test_punctuation(self):
-        assert CHAR_CLASSES["p"] == "!@#$%^&*()-_+="
+        assert CHAR_CLASSES["p"] == "!@#$%^&*-_+="
 
     def test_letters(self):
         assert (
