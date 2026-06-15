@@ -34,6 +34,129 @@ class GenerateOptions:
     compression: CompressionFormat | None = None
 
 
+def writer_process(
+    queue: multiprocessing.Queue,
+    filename: str | None,
+    buffering: int,
+    compression: CompressionFormat | None,
+    compresslevel: int | None,
+    progress: Synchronized,
+    stop_event: Event,
+    writer_failed: Event,
+    status_conn: Connection,
+) -> None:
+    """Write to output file when workers send data to the queue."""
+    try:
+        with mapchar_open(
+            filename,
+            "a",
+            encoding="utf-8",
+            buffering=buffering,
+            compression=compression,
+            compresslevel=compresslevel,
+        ) as fp:
+            if not fp:
+                writer_failed.set()
+                stop_event.set()
+                try:
+                    status_conn.send(False)
+                except Exception:
+                    pass
+                return
+
+            try:
+                status_conn.send(True)
+            except Exception:
+                pass
+
+            try:
+                while True:
+                    msg = queue.get()
+                    if msg is None:
+                        break
+
+                    data, processed = msg
+                    if data:
+                        fp.write(data)
+                    progress.value += processed
+            except BrokenPipeError:
+                stop_event.set()
+                devnull = os.open(os.devnull, os.O_WRONLY)
+                os.dup2(devnull, sys.stdout.fileno())
+
+    except Exception as e:
+        stop_event.set()
+        writer_failed.set()
+        try:
+            status_conn.send(False)
+        except Exception:
+            pass
+        log.error(f"writer error: {e}")
+    finally:
+        try:
+            status_conn.close()
+        except Exception:
+            pass
+
+
+def worker_process(
+    generator: MapcharGenerator,
+    nodes: list[list[Node | FileNode]],
+    w_start_idx: int,
+    t_count: int,
+    queue: Any,
+    delimiter: str,
+    stop_event: Event,
+    writer_failed: Event,
+    flush_limit: int,
+) -> None:
+    """Worker process for word generation."""
+    buf: list[str] = []
+    buf_processed: int = 0
+
+    def safe_put(msg: tuple[str, int]) -> bool:
+        while not stop_event.is_set() and not writer_failed.is_set():
+            try:
+                queue.put(msg, timeout=0.5)
+                return True
+            except Exception:
+                continue
+        return False
+
+    try:
+        w_start, expr_idx = generator.get_word_and_expr_at_index(nodes, w_start_idx)
+        worker_nodes = nodes[expr_idx:]
+
+        generated_count = 0
+        for token in generator.generate(
+            worker_nodes, start_token=w_start, end_token=None
+        ):
+            if generated_count >= t_count:
+                break
+            generated_count += 1
+            item = token + delimiter
+            buf.append(item)
+            buf_processed += len(item)
+
+            if buf_processed >= flush_limit:
+                data = "".join(buf)
+                processed_bytes = len(data.encode("utf-8"))
+                if not safe_put((data, processed_bytes)):
+                    return
+                buf.clear()
+                buf_processed = 0
+
+        if buf:
+            data = "".join(buf)
+            processed_bytes = len(data.encode("utf-8"))
+            safe_put((data, processed_bytes))
+
+    except Exception as e:
+        log.error(f"worker error: {e}")
+        stop_event.set()
+        writer_failed.set()
+
+
 def generate(
     generator: MapcharGenerator,
     nodes: list[list[Node | FileNode]],
@@ -92,129 +215,6 @@ def generate(
             # multi-process generation with writer process.
             writer_failed = multiprocessing.Event()
             writer_status_parent, writer_status_child = multiprocessing.Pipe()
-
-            def writer_process(
-                queue: multiprocessing.Queue,
-                filename: str | None,
-                buffering: int,
-                compression: CompressionFormat | None,
-                compresslevel: int | None,
-                progress: Synchronized,
-                stop_event: Event,
-                writer_failed: Event,
-                status_conn: Connection,
-            ) -> None:
-                """Write to output file when workers send data to the queue."""
-                try:
-                    with mapchar_open(
-                        filename,
-                        "a",
-                        encoding="utf-8",
-                        buffering=buffering,
-                        compression=compression,
-                        compresslevel=compresslevel,
-                    ) as fp:
-                        if not fp:
-                            writer_failed.set()
-                            stop_event.set()
-                            try:
-                                status_conn.send(False)
-                            except Exception:
-                                pass
-                            return
-
-                        try:
-                            status_conn.send(True)
-                        except Exception:
-                            pass
-
-                        try:
-                            while True:
-                                msg = queue.get()
-                                if msg is None:
-                                    break
-
-                                data, processed = msg
-                                if data:
-                                    fp.write(data)
-                                progress.value += processed
-                        except BrokenPipeError:
-                            stop_event.set()
-                            devnull = os.open(os.devnull, os.O_WRONLY)
-                            os.dup2(devnull, sys.stdout.fileno())
-
-                except Exception as e:
-                    stop_event.set()
-                    writer_failed.set()
-                    try:
-                        status_conn.send(False)
-                    except Exception:
-                        pass
-                    log.error(f"writer error: {e}")
-                finally:
-                    try:
-                        status_conn.close()
-                    except Exception:
-                        pass
-
-            def worker_process(
-                generator: MapcharGenerator,
-                nodes: list[list[Node | FileNode]],
-                w_start_idx: int,
-                t_count: int,
-                queue: Any,
-                delimiter: str,
-                stop_event: Event,
-                writer_failed: Event,
-            ) -> None:
-                """Worker process for word generation."""
-                buf: list[str] = []
-                buf_processed: int = 0
-                flush_limit = options.flush_limit
-
-                def safe_put(msg: tuple[str, int]) -> bool:
-                    while not stop_event.is_set() and not writer_failed.is_set():
-                        try:
-                            queue.put(msg, timeout=0.5)
-                            return True
-                        except Exception:
-                            continue
-                    return False
-
-                try:
-                    w_start, expr_idx = generator.get_word_and_expr_at_index(
-                        nodes, w_start_idx
-                    )
-                    worker_nodes = nodes[expr_idx:]
-
-                    generated_count = 0
-                    for token in generator.generate(
-                        worker_nodes, start_token=w_start, end_token=None
-                    ):
-                        if generated_count >= t_count:
-                            break
-                        generated_count += 1
-                        item = token + delimiter
-                        buf.append(item)
-                        buf_processed += len(item)
-
-                        if buf_processed >= flush_limit:
-                            data = "".join(buf)
-                            processed_bytes = len(data.encode("utf-8"))
-                            if not safe_put((data, processed_bytes)):
-                                return
-                            buf.clear()
-                            buf_processed = 0
-
-                    if buf:
-                        data = "".join(buf)
-                        processed_bytes = len(data.encode("utf-8"))
-                        safe_put((data, processed_bytes))
-                except Exception as e:
-                    log.error(f"worker error: {e}")
-                    stop_event.set()
-                    writer_failed.set()
-
             queue: multiprocessing.Queue = multiprocessing.Queue(maxsize=128)
             stop_event = multiprocessing.Event()
 
@@ -288,6 +288,7 @@ def generate(
                         options.delimiter,
                         stop_event,
                         writer_failed,
+                        options.flush_limit,
                     ),
                 )
                 workers.append(p)
