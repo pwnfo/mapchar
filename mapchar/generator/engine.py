@@ -476,16 +476,20 @@ class MapcharGenerator:
         end_token: str | None = None,
     ) -> Generator[str]:
         """starts the wordlist generation, optionally bounded by start_token and end_token."""
-        found_start = False if start_token else True
+        found_start = start_token is None
 
         for expr_nodes in nodes:
-            if not found_start and start_token is not None:
-                try:
-                    self._calculate_skipped_stats(expr_nodes, start_token)
+            if not found_start:
+                if start_token is not None:
+                    try:
+                        self._calculate_skipped_stats(expr_nodes, start_token)
+                        found_start = True
+                        iterator = self._combine_resume(expr_nodes, 0, start_token)
+                    except ExprError:
+                        continue
+                else:
                     found_start = True
-                    iterator = self._combine_resume(expr_nodes, 0, start_token)
-                except ExprError:
-                    continue
+                    iterator = self._combine_resume(expr_nodes, 0, None)
             else:
                 iterator = self._combine_resume(expr_nodes, 0, None)
 
@@ -544,8 +548,8 @@ class MapcharGenerator:
                 skipped_count += inner_idx * suffix_count
                 skipped_bytes += (
                     (inner_bytes_skipped * suffix_count)
-                    + (inner_idx * suffix_bytes)
                     + (inner_idx * suffix_count * current_prefix_len)
+                    + (inner_idx * suffix_bytes)
                 )
 
                 bindings[node.name] = found_val
@@ -760,65 +764,58 @@ class MapcharGenerator:
         start_token: str | None = None,
         end_token: str | None = None,
     ) -> tuple[int, int]:
-        total_b = 0
-        total_c = 0
+        actual_count = 0
+        actual_bytes = 0
 
-        start_sk_c = 0
-        start_sk_b = 0
-        start_found = False if start_token else True
-
-        end_sk_c = 0
-        end_sk_b = 0
-        end_found = False if end_token else True
+        start_found = start_token is None
+        end_found = False
 
         for expr_nodes in nodes:
             full_b, full_c = self._stats_single(expr_nodes, delimiter_len=delimiter_len)
 
-            if not start_found and start_token is not None:
-                try:
-                    c, b = self._calculate_skipped_stats(
-                        expr_nodes, start_token
-                    )  # does not include delimiter!
-                    start_sk_c += c
-                    start_sk_b += b + (c * delimiter_len)
+            expr_start_c = 0
+            expr_start_b = 0
+            expr_end_c = full_c
+            expr_end_b = full_b
+
+            if not start_found:
+                if start_token is not None:
+                    try:
+                        c, b = self._calculate_skipped_stats(expr_nodes, start_token)
+                        expr_start_c = c
+                        expr_start_b = b + (c * delimiter_len)
+                        start_found = True
+                    except ExprError:
+                        continue
+                else:
                     start_found = True
-                except ExprError:
-                    start_sk_c += full_c
-                    start_sk_b += full_b
 
             if not end_found and end_token is not None:
                 try:
                     c, b = self._calculate_skipped_stats(expr_nodes, end_token)
-                    end_sk_c += c + 1
+                    expr_end_c = c + 1
                     end_word_size = len(end_token.encode("utf-8"))
-                    end_sk_b += b + (c * delimiter_len) + end_word_size + delimiter_len
+                    expr_end_b = b + (c * delimiter_len) + end_word_size + delimiter_len
                     end_found = True
                 except ExprError:
-                    end_sk_c += full_c
-                    end_sk_b += full_b
+                    # end_token is not in this expression
+                    pass
 
-            total_b += full_b
-            total_c += full_c
+            if start_found:
+                count = expr_end_c - expr_start_c
+                bytes_val = expr_end_b - expr_start_b
+
+                if count > 0:
+                    actual_count += count
+                    actual_bytes += bytes_val
+
+            if end_found:
+                break
 
         if start_token and not start_found:
             raise ExprError(f"word {start_token!r} is not reachable by this expression")
         if end_token and not end_found:
             raise ExprError(f"word {end_token!r} is not reachable by this expression")
-
-        actual_count = total_c
-        actual_bytes = total_b
-
-        if start_token:
-            actual_count = total_c - start_sk_c
-            actual_bytes = total_b - start_sk_b
-
-        if end_token:
-            if start_token:
-                actual_count = end_sk_c - start_sk_c
-                actual_bytes = end_sk_b - start_sk_b
-            else:
-                actual_count = end_sk_c
-                actual_bytes = end_sk_b
 
         if actual_count < 0:
             actual_count = 0
