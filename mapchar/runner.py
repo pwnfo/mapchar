@@ -117,7 +117,7 @@ def worker_process(
     def safe_put(msg: tuple[str, int]) -> bool:
         while not stop_event.is_set() and not writer_failed.is_set():
             try:
-                queue.put(msg, timeout=0.5)
+                queue.put(msg, timeout=0.1)
                 return True
             except Exception:
                 continue
