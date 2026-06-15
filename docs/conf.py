@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "Mapchar"
 copyright = "2026, Ryan R. <pwnfo@proton.me>"
 author = "Ryan R."
-release = "7.0.0"
+release = "8.0.0"
 
 extensions = [
     "sphinx.ext.autodoc",
