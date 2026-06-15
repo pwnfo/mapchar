@@ -31,7 +31,7 @@ Symbol    Meaning                  Example / Resulting Output
 ``/H``    Hexadecimal (upper)      ``0–9``, ``A–F``
 ``/s``    Whitespace               `` `` (Space)
 ``/o``    Octal digits             ``0–7``
-``/p``    Special characters       ``!@#$%^&*()-_+=``
+``/p``    Special characters       ``!@#$%^&*-_+=``
 ``/b``    Newline                  ``\n``
 ========= ======================== =====================================
 

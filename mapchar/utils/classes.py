@@ -7,7 +7,7 @@ CHAR_CLASSES: dict[str, str] = {
     "A": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
     "s": " ",
     "o": "01234567",
-    "p": "!@#$%^&*()-_+=",
+    "p": "!@#$%^&*-_+=",
     "l": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
     "b": "\n",
 }
