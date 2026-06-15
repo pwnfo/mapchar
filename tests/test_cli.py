@@ -1,4 +1,5 @@
-from mapchar.cli import GenerateOptions, format_expression
+from mapchar.cli import format_expression
+from mapchar.runner import GenerateOptions
 
 
 class TestFormatExpression:
