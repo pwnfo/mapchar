@@ -195,20 +195,21 @@ def generate(
                             break
                         generated_count += 1
                         item = token + delimiter
-                        item_b = len(item.encode("utf-8"))
-
                         buf.append(item)
-                        buf_processed += item_b
+                        buf_processed += len(item)
 
                         if buf_processed >= flush_limit:
-                            if not safe_put(("".join(buf), buf_processed)):
+                            data = "".join(buf)
+                            processed_bytes = len(data.encode("utf-8"))
+                            if not safe_put((data, processed_bytes)):
                                 return
                             buf.clear()
                             buf_processed = 0
 
-                    if buf_processed > 0:
-                        safe_put(("".join(buf), buf_processed))
-
+                    if buf:
+                        data = "".join(buf)
+                        processed_bytes = len(data.encode("utf-8"))
+                        safe_put((data, processed_bytes))
                 except Exception as e:
                     log.error(f"worker error: {e}")
                     stop_event.set()
@@ -326,33 +327,32 @@ def generate(
                     nodes, start_token=start_token, end_token=end_token
                 ):
                     item = token + options.delimiter
-                    item_b = len(item.encode("utf-8"))
-
                     buf.append(item)
-                    buf_processed += item_b
+                    buf_processed += len(item)
 
                     if buf_processed >= flush_limit:
+                        data = "".join(buf)
                         try:
-                            fp.write("".join(buf))
+                            fp.write(data)
                         except BrokenPipeError:
                             devnull = os.open(os.devnull, os.O_WRONLY)
                             os.dup2(devnull, sys.stdout.fileno())
                             return 0
 
-                        progress.value += buf_processed
+                        progress.value += len(data.encode("utf-8"))
                         buf.clear()
                         buf_processed = 0
 
-                if buf_processed > 0:
+                if buf:
+                    data = "".join(buf)
                     try:
-                        if buf:
-                            fp.write("".join(buf))
+                        fp.write(data)
                         fp.flush()
                     except BrokenPipeError:
                         devnull = os.open(os.devnull, os.O_WRONLY)
                         os.dup2(devnull, sys.stdout.fileno())
                         return 0
-                    progress.value += buf_processed
+                    progress.value += len(data.encode("utf-8"))
 
     except KeyboardInterrupt:
         if stop_event is not None:
