@@ -134,6 +134,8 @@ def print_stats(
         )
     except (OverflowError, ValueError):
         log.info("  <OverflowError>")
+        return 1
+
     return 0
 
 
