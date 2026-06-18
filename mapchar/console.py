@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 import sys
 from threading import Event
 from time import monotonic, sleep
@@ -7,7 +8,7 @@ from typing import Any
 
 from mapchar.utils.formatters import format_size
 
-_PROGRESS_UPDATE_INTERVAL = 0.15
+_PROGRESS_UPDATE_INTERVAL = 0.1
 _SPINNER_FRAMES = (
     "⠋",
     "⠙",
@@ -41,7 +42,8 @@ def _render_progress_line(
     current: int,
     total: int,
     elapsed: float,
-) -> str:
+    width: int,
+) -> str | None:
     if total <= 0:
         percent = 100.0
     else:
@@ -51,13 +53,18 @@ def _render_progress_line(
     remaining = max(total - current, 0)
     eta = (remaining / speed) if speed > 0 else None
 
-    return (
+    full_line = (
         f"{spinner} "
         f"[{percent:>3.0f}%] "
         f"{format_size(current, d=2)} / {format_size(total, d=2)} @ "
         f"{format_size(speed, d=2)}/s "
         f"ETA {_format_eta(eta)}"
     )
+
+    if len(full_line) <= width:
+        return full_line
+
+    return full_line[: max(0, width - 3)] + "..."
 
 
 def get_progress(e: Event, r: Any, total: int = 100) -> None:
@@ -70,10 +77,11 @@ def get_progress(e: Event, r: Any, total: int = 100) -> None:
 
     try:
         while not e.is_set():
+            width, _ = shutil.get_terminal_size()
             current = min(int(getattr(r, "value", 0)), total)
             elapsed = monotonic() - start
             spinner = _SPINNER_FRAMES[frame_index % len(_SPINNER_FRAMES)]
-            line = _render_progress_line(spinner, current, total, elapsed)
+            line = _render_progress_line(spinner, current, total, elapsed, width)
             stream.write("\r\033[2K" + line)
             stream.flush()
             frame_index += 1
