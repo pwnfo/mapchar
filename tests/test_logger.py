@@ -1,6 +1,6 @@
 import logging
 
-from mapchar.logger import MapcharRichHandler, log
+from mapchar.logger import MapcharHandler, log
 
 
 class TestLogger:
@@ -11,7 +11,7 @@ class TestLogger:
         assert log.level == logging.INFO
 
     def test_has_mapchar_handler(self):
-        handlers = [h for h in log.handlers if isinstance(h, MapcharRichHandler)]
+        handlers = [h for h in log.handlers if isinstance(h, MapcharHandler)]
         assert len(handlers) >= 1
 
     def test_propagate_disabled(self):

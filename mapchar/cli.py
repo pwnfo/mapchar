@@ -6,9 +6,7 @@ from argparse import Namespace
 from logging import ERROR
 from typing import Any
 
-from rich.console import Console
-
-from mapchar import __version__
+from mapchar import __description__, __version__
 from mapchar.args import create_parser
 from mapchar.compression import (
     COMPRESSION_LEVEL_RANGES,
@@ -21,7 +19,7 @@ from mapchar.runner import GenerateOptions, generate
 from mapchar.utils.formatters import format_size, parse_size
 
 
-def pause(prompt: str = "\u203a Press the Enter key to continue") -> bool:
+def pause(prompt: str = " \u203a Press Enter to start") -> bool:
     """Pause execution and wait for user input in terminal."""
 
     # ignores if interactive prompt is not supported
@@ -80,15 +78,13 @@ def format_expression(expression: str, files: list[str]) -> tuple[str, list[str]
     return expression, files_out
 
 
-def print_pattern_stats(
+def print_stats(
     generator: MapcharGenerator,
     nodes: list[list[Any]],
     tokens: list[list[Any]],
     args: Namespace,
 ) -> int:
     """Displays detailed pattern statistics."""
-    console = Console()
-
     delim_len = len(args.delimiter.encode("utf-8"))
 
     try:
@@ -104,7 +100,7 @@ def print_pattern_stats(
     total_nodes = sum(len(n) for n in nodes)
     avg_len = u_bytes / u_words if u_words > 0 else 0
 
-    console.print("[bold underline white]Pattern Statistics[/]")
+    log.info("Pattern Statistics")
 
     stats_list = [
         ("Expressions", len(nodes)),
@@ -115,46 +111,45 @@ def print_pattern_stats(
     ]
 
     for label, value in stats_list:
-        console.print(f"  [white]{label:.<20}[/] [bold white]{value}[/]")
+        log.info(f"  {label:.<20} {value}")
 
     if args.start or args.end:
-        console.print("\n[bold underline white]Range Filtering[/]")
+        log.info("\nRange Filtering")
         ps_words = (s_words / u_words) * 100 if u_words > 0 else 0
         pu_words = 100 - ps_words
         range_list = [
-            ("Start Word", args.start or "[italic]None[/]"),
-            ("End Word", args.end or "[italic]None[/]"),
+            ("Start Word", args.start or "<None>"),
+            ("End Word", args.end or "<None>"),
             ("Filtered Words", f"{s_words:,} ({ps_words:.2f}%)"),
             ("Ignored Words", f"{u_words - s_words:,} ({pu_words:.2f}%)"),
         ]
         for label, value in range_list:
-            console.print(f"  [white]{label:.<20}[/] [bold white]{value}[/]")
+            log.info(f"  {label:.<20} {value}")
 
-    console.print("\n[bold underline white]Final Result[/]")
+    log.info("\nFinal Result")
     try:
-        console.print(f"  Entries to generate: [bold white]{s_words:,}[/]")
-        console.print(
-            f"  Estimated size:      [bold white]{format_size(s_bytes, d=2)}[/] [dim white]({s_bytes} bytes)[/]"
+        log.info(f"  Entries to generate: {s_words}")
+        log.info(
+            f"  Estimated size:      {format_size(s_bytes, d=2)} ({s_bytes} bytes)"
         )
     except (OverflowError, ValueError):
-        console.print("  [white italic]<OverflowError>[/]")
+        log.info("  <OverflowError>")
     return 0
 
 
-def print_info(
-    s_words: int, estimated_size: str, compressor: None | str = None
-) -> None:
+def print_info(s_words: int, s_bytes: int, compressor: None | str = None) -> None:
     """Displays generation statistics and information before execution."""
-    if compressor is None:
-        log.info(
-            f"Mapchar will generate [bold rgb(255,120,0)]{s_words:,} entries[/] "
-            f"({estimated_size})."
+    estimated_size = format_size(s_bytes, d=2)
+
+    log.info(
+        f"Entries to generate: {s_words:,} "
+        + (
+            f"({estimated_size}"
+            if compressor is None
+            else f"({estimated_size} uncompressed, {compressor}"
         )
-    else:
-        log.info(
-            f"Mapchar will generate [bold rgb(255,120,0)]{s_words:,} entries[/] "
-            f"({estimated_size} [underline]uncompressed[/], {compressor})."
-        )
+        + ")."
+    )
 
 
 def main() -> int:
@@ -234,8 +229,6 @@ def main() -> int:
     nodes: list[list[Any]] = []
     tokens_list: list[list[Any]] = []
 
-    log.info(f"[bold rgb(255,120,0)]Mapchar[/] @ v{__version__}\n")
-
     if args.expr_file is not None:
         try:
             for d in process_expr_file(args.expr_file):
@@ -270,7 +263,9 @@ def main() -> int:
             return 1
 
     if args.stats:
-        return print_pattern_stats(generator, nodes, tokens_list, args)
+        return print_stats(generator, nodes, tokens_list, args)
+
+    log.info(f"Mapchar v{__version__} [by Pwnfo]\n{__description__}\n")
 
     try:
         s_bytes, s_words = generator.stats(
@@ -283,8 +278,7 @@ def main() -> int:
         log.error(e)
         return 1
 
-    estimated_size = format_size(s_bytes, d=2)
-    print_info(s_words, estimated_size, compressor=args.compress)
+    print_info(s_words, s_bytes, compressor=args.compress)
 
     if not (args.quiet or args.non_interactive) and not pause():
         return 0

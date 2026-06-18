@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "mapchar"
 version = "8.0.0"
-description = "Generate wordlists using pattern logic and expressions."
+description = "Generate wordlists using patterns and expressions."
 authors = ["Ryan R. <pwnfo@proton.me>"]
 readme = "README.md"
 license = "MIT"
@@ -9,7 +9,6 @@ packages = [{ include = "mapchar" }]
 
 [tool.poetry.dependencies]
 python = ">=3.10"
-rich = "^15.0.0"
 
 [tool.poetry.scripts]
 mapchar = "mapchar.cli:main"

@@ -45,10 +45,10 @@ def mapchar_open(
         fp = open(file, *args, **kwargs)
         yield fp
     except FileNotFoundError:
-        log.error(f"file {file!r} not found.")
+        log.error(f"File {file!r} not found.")
         yield None
     except PermissionError:
-        log.error(f"no permission for {file!r}.")
+        log.error(f"No permission for {file!r}.")
         yield None
     except IsADirectoryError:
         log.error(f"{file!r} is a directory.")
@@ -57,7 +57,7 @@ def mapchar_open(
         log.error(f"{file!r} already exists.")
         yield None
     except Exception:
-        log.exception(f"unexpected error while opening {file!r}")
+        log.exception(f"Unexpected error while opening {file!r}")
         yield None
     finally:
         if fp is not None:

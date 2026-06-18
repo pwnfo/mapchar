@@ -1,56 +1,44 @@
 import logging
 import sys
 
-from rich.console import Console
-from rich.logging import RichHandler
-from rich.markup import render
-from rich.text import Text
 
+class MapcharHandler(logging.Handler):
+    """Writes warnings and errors to sys.stderr"""
 
-class PlainRichHandler(RichHandler):
-    """Disable Rich text highlighting"""
-
-    def render_message(self, record: logging.LogRecord, message: str) -> Text:
-        return render(message)
-
-    def get_level_text(self, record: logging.LogRecord) -> Text:
-        return Text(record.levelname)
-
-
-class MapcharRichHandler(PlainRichHandler):
-    """Writes warnings and errors to `sys.stderr`"""
+    def __init__(self) -> None:
+        super().__init__()
+        self.stdout = sys.stdout
+        self.stderr = sys.stderr
 
     def emit(self, record: logging.LogRecord) -> None:
-        if record.levelno < logging.WARNING:
-            self.console = Console(file=sys.stdout)
-        else:
-            self.console = Console(file=sys.stderr)
+        try:
+            msg = self.format(record)
 
-        super().emit(record)
+            if record.levelno < logging.WARNING:
+                stream = self.stdout
+            else:
+                stream = self.stderr
+
+            stream.write(msg + "\n")
+            stream.flush()
+
+        except Exception:
+            self.handleError(record)
 
 
 class MapcharFormatter(logging.Formatter):
-    """Uses the 'Warning:' prefix"""
-
     def format(self, record: logging.LogRecord) -> str:
         if record.levelno == logging.WARNING:
-            return f"[bold yellow]\\[WARN][/bold yellow] {record.getMessage()}"
+            return f"\033[1;33mWARN:\033[0m {record.getMessage()}"
         if record.levelno == logging.ERROR:
-            return f"[bold red]\\[ERROR][/bold red] {record.getMessage()}"
+            return f"\033[1;31mERROR:\033[0m {record.getMessage()}"
         return record.getMessage()
 
 
 def setup_logger() -> logging.Logger:
     log = logging.getLogger(__name__)
 
-    handler = MapcharRichHandler(
-        markup=True,
-        rich_tracebacks=True,
-        show_time=False,
-        show_level=False,
-        show_path=False,
-        keywords=[],
-    )
+    handler = MapcharHandler()
 
     handler.setFormatter(MapcharFormatter())
 

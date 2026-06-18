@@ -120,12 +120,12 @@ class TestFileNode:
 
     def test_missing_file_raises(self, tmp_path):
         node = FileNode([str(tmp_path / "nope.txt")])
-        with pytest.raises(ExprError, match="failed to open"):
+        with pytest.raises(ExprError, match="Failed to open"):
             _ = node.lines
 
     def test_empty_file_raises(self, empty_file):
         node = FileNode([str(empty_file)])
-        with pytest.raises(ExprError, match="no lines"):
+        with pytest.raises(ExprError, match="No lines"):
             _ = node.lines
 
     def test_repr(self, wordlist_file):
@@ -162,7 +162,7 @@ class TestTokenize:
         assert tokens == [("LIT", "[")]
 
     def test_escape_at_end_raises(self):
-        with pytest.raises(ExprError, match="invalid escape"):
+        with pytest.raises(ExprError, match="Invalid escape"):
             self.gen.tokenize("\\")
 
     def test_simple_class(self):
@@ -174,11 +174,11 @@ class TestTokenize:
         assert tokens == [("CLASS", ["cat", "dog"])]
 
     def test_unclosed_class_raises(self):
-        with pytest.raises(ExprError, match="unclosed character class"):
+        with pytest.raises(ExprError, match="Unclosed character class"):
             self.gen.tokenize("[abc")
 
     def test_empty_class_raises(self):
-        with pytest.raises(ExprError, match="empty character class"):
+        with pytest.raises(ExprError, match="Empty character class"):
             self.gen.tokenize("[]")
 
     def test_literal_group(self):
@@ -186,7 +186,7 @@ class TestTokenize:
         assert tokens == [("CLASS", ["hello"])]
 
     def test_unclosed_literal_group_raises(self):
-        with pytest.raises(ExprError, match="unclosed character class"):
+        with pytest.raises(ExprError, match="Unclosed character class"):
             self.gen.tokenize("(hello")
 
     def test_numeric_range(self):
@@ -206,19 +206,19 @@ class TestTokenize:
         assert tokens == [("RANGE", ["10", "7", "4", "1"])]
 
     def test_range_zero_step_raises(self):
-        with pytest.raises(ExprError, match="step cannot be zero"):
+        with pytest.raises(ExprError, match="Range step cannot be zero"):
             self.gen.tokenize("#[0-5:0]")
 
     def test_range_invalid_direction_raises(self):
-        with pytest.raises(ExprError, match="invalid range sequence"):
+        with pytest.raises(ExprError, match="Invalid range sequence"):
             self.gen.tokenize("#[5-0:1]")
 
     def test_unclosed_range_raises(self):
-        with pytest.raises(ExprError, match="unclosed range"):
+        with pytest.raises(ExprError, match="Unclosed range"):
             self.gen.tokenize("#[0-5")
 
     def test_invalid_range_format_raises(self):
-        with pytest.raises(ExprError, match="invalid range"):
+        with pytest.raises(ExprError, match="Invalid range"):
             self.gen.tokenize("#[abc]")
 
     def test_hash_without_bracket_is_literal(self):
@@ -250,7 +250,7 @@ class TestTokenize:
             self.gen.tokenize("[ab]{5,2}")
 
     def test_braces_invalid_syntax_raises(self):
-        with pytest.raises(ExprError, match="invalid repetition"):
+        with pytest.raises(ExprError, match="Invalid repetition"):
             self.gen.tokenize("[ab]{}")
 
 
@@ -530,13 +530,13 @@ class TestBinding:
     def test_undefined_ref_in_generate_raises(self):
         tokens = self.gen.tokenize("<@x>")
         nodes = self.gen.parse(tokens)
-        with pytest.raises(ExprError, match="undefined variable"):
+        with pytest.raises(ExprError, match="Undefined variable"):
             list(self.gen.generate(nodes))
 
     def test_undefined_ref_in_stats_raises(self):
         tokens = self.gen.tokenize("<@x>")
         nodes = self.gen.parse(tokens)
-        with pytest.raises(ExprError, match="undefined variable"):
+        with pytest.raises(ExprError, match="Undefined variable"):
             self.gen.stats(nodes)
 
     def test_tokenize_bind_def_produces_correct_token(self):
@@ -566,11 +566,11 @@ class TestBinding:
         assert nodes[1].name == "d"
 
     def test_unclosed_binding_raises(self):
-        with pytest.raises(ExprError, match="unclosed binding"):
+        with pytest.raises(ExprError, match="Unclosed binding"):
             self.gen.tokenize("<@d=/d")
 
     def test_invalid_binding_name_raises(self):
-        with pytest.raises(ExprError, match="invalid binding name"):
+        with pytest.raises(ExprError, match="Invalid binding name"):
             self.gen.tokenize("<@123=abc>")
 
     def test_literal_lt_without_at_is_literal(self):

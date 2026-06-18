@@ -1,63 +1,13 @@
 from threading import Event
 from unittest.mock import patch
 
-from rich.text import Text
-
-from mapchar.console import MapcharETAColumn, SpeedColumn, get_progress
+from mapchar.console import get_progress
 
 
 class DummyTask:
     def __init__(self, time_remaining=None, speed=None):
         self.time_remaining = time_remaining
         self.speed = speed
-
-
-class TestMapcharETAColumn:
-    def test_render_none(self):
-        col = MapcharETAColumn()
-        task = DummyTask(time_remaining=None)
-        res = col.render(task)
-        assert isinstance(res, Text)
-        assert res.plain == "--:--"
-        assert res.style == "accent2"
-
-    def test_render_zero(self):
-        col = MapcharETAColumn()
-        task = DummyTask(time_remaining=0)
-        res = col.render(task)
-        assert res.plain == "00:00"
-        assert res.style == "accent_dim"
-
-    def test_render_minutes_and_seconds(self):
-        col = MapcharETAColumn()
-        task = DummyTask(time_remaining=65)
-        res = col.render(task)
-        assert res.plain == "01:05"
-        assert res.style == "accent_dim"
-
-    def test_render_hours(self):
-        col = MapcharETAColumn()
-        task = DummyTask(time_remaining=3600)
-        res = col.render(task)
-        assert res.plain == "60:00"
-        assert res.style == "accent_dim"
-
-
-class TestSpeedColumn:
-    def test_render_none(self):
-        col = SpeedColumn()
-        task = DummyTask(speed=None)
-        res = col.render(task)
-        assert isinstance(res, Text)
-        assert "0.00 B/s" in res.plain
-        assert res.style == "accent2"
-
-    def test_render_value(self):
-        col = SpeedColumn()
-        task = DummyTask(speed=1024)
-        res = col.render(task)
-        assert "1.00 KB/s" in res.plain
-        assert res.style == "accent2"
 
 
 class DummyValue:

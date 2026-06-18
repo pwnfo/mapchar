@@ -11,6 +11,10 @@ class MapcharGenerator:
     BRACES_RE = re.compile(r"\{(\d+)(?:\s*,\s*(\d+))?\}")
     RANGE_RE = re.compile(r"\s*([0-9]+)\s*-\s*([0-9]+)\s*(?::\s*([+-]?\d+)\s*)?$")
 
+    def _unreachable_error(self, token: str) -> ExprError:
+        """Create a standardized 'unreachable token' error."""
+        return ExprError(f"Pattern does not produce word {token!r}")
+
     def _find_closing(self, s: str, start: int, closer: str) -> int:
         i = start
         n = len(s)
@@ -65,13 +69,13 @@ class MapcharGenerator:
         end_pos = self._find_closing(pattern, start_idx, "]")
         if end_pos == -1:
             raise ExprError(
-                "unclosed range (missing ']')", error_pos=(pattern, start_idx)
+                "Unclosed range (missing ']')", error_pos=(pattern, start_idx)
             )
         inner = pattern[start_idx:end_pos]
         m = self.RANGE_RE.match(inner)
         if not m:
             raise ExprError(
-                "invalid range syntax (expected '#[START-END[:STEP]]')",
+                "Invalid range syntax (expected '#[START-END[:STEP]]')",
                 error_pos=(pattern, start_idx),
             )
         r_start = int(m.group(1))
@@ -79,20 +83,20 @@ class MapcharGenerator:
         step_str = m.group(3)
         step = int(step_str) if step_str else (1 if r_start <= r_end else -1)
         if step == 0:
-            raise ExprError("range step cannot be zero", error_pos=(pattern, start_idx))
+            raise ExprError("Range step cannot be zero", error_pos=(pattern, start_idx))
         if r_start < 0 or r_end < 0:
             raise ExprError(
-                "range bounds must be non-negative", error_pos=(pattern, start_idx)
+                "Range bounds must be non-negative", error_pos=(pattern, start_idx)
             )
         if (step > 0 and r_start > r_end) or (step < 0 and r_start < r_end):
-            raise ExprError("invalid range sequence", error_pos=(pattern, start_idx))
+            raise ExprError("Invalid range sequence", error_pos=(pattern, start_idx))
         if step > 0:
             rng = range(r_start, r_end + 1, step)
         else:
             rng = range(r_start, r_end - 1, step)
         choices = [str(x) for x in rng]
         if not choices:
-            raise ExprError("range produced no values", error_pos=(pattern, start_idx))
+            raise ExprError("Range produced no values", error_pos=(pattern, start_idx))
         return choices, end_pos + 1
 
     def _parse_class(
@@ -102,13 +106,13 @@ class MapcharGenerator:
         end_pos = self._find_closing(pattern, start_idx, closer)
         if end_pos == -1:
             raise ExprError(
-                f"unclosed character class (missing {closer!r})",
+                f"Unclosed character class (missing {closer!r})",
                 error_pos=(pattern, start_idx),
             )
         inner = pattern[start_idx:end_pos]
         if not inner:
             raise ExprError(
-                "empty character class is not allowed", error_pos=(pattern, start_idx)
+                "Empty character class is not allowed", error_pos=(pattern, start_idx)
             )
         if literal_mode:
             return [inner], end_pos + 1
@@ -125,7 +129,7 @@ class MapcharGenerator:
                     choices.append(ch)
             if not choices:
                 raise ExprError(
-                    "invalid character class contents", error_pos=(pattern, start_idx)
+                    "Invalid character class contents", error_pos=(pattern, start_idx)
                 )
             return choices, end_pos + 1
 
@@ -147,7 +151,7 @@ class MapcharGenerator:
         choices = [s.strip() for s in segments if s.strip()]
         if not choices:
             raise ExprError(
-                "invalid character class contents", error_pos=(pattern, start_idx)
+                "Invalid character class contents", error_pos=(pattern, start_idx)
             )
         return choices, end_pos + 1
 
@@ -163,7 +167,7 @@ class MapcharGenerator:
             if c == "\\":
                 if i + 1 >= n:
                     raise ExprError(
-                        "invalid escape sequence (trailing backslash)",
+                        "Invalid escape sequence (trailing backslash)",
                         error_pos=(pattern, i + 1),
                     )
                 tokens.append(("LIT", pr[i + 1]))
@@ -174,7 +178,7 @@ class MapcharGenerator:
                     end = self._find_binding_close(pr, i + 2)
                     if end == -1:
                         raise ExprError(
-                            "unclosed binding (missing '>')", error_pos=(pattern, i + 1)
+                            "Unclosed binding (missing '>')", error_pos=(pattern, i + 1)
                         )
                     inner = pr[i + 2 : end]
                     eq_pos = inner.find("=")
@@ -182,7 +186,7 @@ class MapcharGenerator:
                         name = inner.strip()
                         if not name.isidentifier():
                             raise ExprError(
-                                f"invalid binding name {name!r}",
+                                f"Invalid binding name {name!r}",
                                 error_pos=(pattern, i + 1),
                             )
                         tokens.append(("BIND_REF", name))
@@ -191,7 +195,7 @@ class MapcharGenerator:
                         expr = inner[eq_pos + 1 :]
                         if not name.isidentifier():
                             raise ExprError(
-                                f"invalid binding name {name!r}",
+                                f"Invalid binding name {name!r}",
                                 error_pos=(pattern, i + 1),
                             )
                         inner_tokens = self._tokenize_raw(expr)
@@ -235,7 +239,7 @@ class MapcharGenerator:
                     b = int(m.group(2)) if m.group(2) is not None else a
                     if a > b:
                         raise ExprError(
-                            "invalid repetition range (min > max)",
+                            "Invalid repetition range (min > max)",
                             error_pos=(pattern, i + 1),
                         )
                     tokens.append(("BRACES", (a, b)))
@@ -243,7 +247,7 @@ class MapcharGenerator:
                     continue
                 else:
                     raise ExprError(
-                        "invalid repetition syntax", error_pos=(pattern, i + 1)
+                        "Invalid repetition syntax", error_pos=(pattern, i + 1)
                     )
             tokens.append(("LIT", c))
             i += 1
@@ -354,7 +358,7 @@ class MapcharGenerator:
                 nodes.append(Node(val, min_rep, max_rep))
             elif kind == "FILE":
                 if file_idx >= len(file_groups):
-                    raise ExprError("insufficient file assignments")
+                    raise ExprError("Insufficient file assignments")
                 nodes.append(FileNode(file_groups[file_idx], min_rep, max_rep))
                 file_idx += 1
             elif kind == "BIND_DEF":
@@ -366,7 +370,7 @@ class MapcharGenerator:
             elif kind == "BIND_REF":
                 nodes.append(BindRefNode(val, min_rep, max_rep))
             else:
-                raise ExprError(f"unexpected token {kind!r}")
+                raise ExprError(f"Unexpected token {kind!r}")
             i += 1
         return nodes, file_idx
 
@@ -392,7 +396,7 @@ class MapcharGenerator:
             if count_ft:
                 if len(files) - file_idx < count_ft:
                     raise ExprError(
-                        f"pattern requires {count_ft} files but {(len(files) - file_idx)} were provided"
+                        f"Pattern requires {count_ft} files but {(len(files) - file_idx)} were provided"
                     )
                 file_groups = [[f] for f in files[file_idx : file_idx + count_ft]]
                 file_idx += count_ft
@@ -440,7 +444,7 @@ class MapcharGenerator:
 
         if isinstance(cur, BindRefNode):
             if cur.name not in bindings:
-                raise ExprError(f"undefined variable {cur.name!r}")
+                raise ExprError(f"Undefined variable {cur.name!r}")
             val_base = bindings[cur.name]
             for r in range(cur.min_rep, cur.max_rep + 1):
                 val = val_base * r if r > 0 else ""
@@ -541,9 +545,7 @@ class MapcharGenerator:
                     inner_bytes_skipped += val_b
 
                 if found_val is None:
-                    raise ExprError(
-                        f"word {target!r} is not reachable by this expression"
-                    )
+                    raise self._unreachable_error(target)
 
                 skipped_count += inner_idx * suffix_count
                 skipped_bytes += (
@@ -559,7 +561,7 @@ class MapcharGenerator:
 
             elif isinstance(node, BindRefNode):
                 if node.name not in bindings:
-                    raise ExprError(f"undefined variable {node.name!r}")
+                    raise ExprError(f"Undefined variable {node.name!r}")
                 val = bindings[node.name]
                 val_b = len(val.encode("utf-8"))
 
@@ -577,18 +579,14 @@ class MapcharGenerator:
                         )
 
                     if found_r is None:
-                        raise ExprError(
-                            f"word {target!r} is not reachable by this expression"
-                        )
+                        raise self._unreachable_error(target)
 
                     current_prefix_len += len((val * found_r).encode("utf-8"))
                     current_target = current_target[len(val * found_r) :]
                 else:
                     out = val * node.min_rep if node.min_rep > 0 else ""
                     if not current_target.startswith(out):
-                        raise ExprError(
-                            f"word {target!r} is not reachable by this expression"
-                        )
+                        raise self._unreachable_error(target)
                     current_prefix_len += len(out.encode("utf-8"))
                     current_target = current_target[len(out) :]
 
@@ -601,16 +599,14 @@ class MapcharGenerator:
                 skipped_bytes += (n_bytes * suffix_count) + (n_count * suffix_bytes)
 
                 if remainder is None:
-                    raise ExprError(
-                        f"word {target!r} is not reachable by this expression"
-                    )
+                    raise self._unreachable_error(target)
 
                 consumed = current_target[: len(current_target) - len(remainder)]
                 current_prefix_len += len(consumed.encode("utf-8"))
                 current_target = remainder
 
         if current_target != "":
-            raise ExprError(f"word {target!r} is not reachable by this expression")
+            raise self._unreachable_error(target)
 
         return skipped_count, skipped_bytes
 
@@ -627,7 +623,7 @@ class MapcharGenerator:
                 full_b, full_c = self._stats_single(expr_nodes, delimiter_len=0)
                 skipped_count += full_c
                 skipped_bytes += full_b
-        raise ExprError(f"word {target!r} is not reachable by this expression")
+        raise self._unreachable_error(target)
 
     def get_word_at_index(self, nodes: list, index: int) -> str:
         """retrieves the word at a specific index."""
@@ -644,7 +640,7 @@ class MapcharGenerator:
                 result.append(val)
             elif isinstance(node, BindRefNode):
                 if node.name not in bindings:
-                    raise ExprError(f"undefined variable {node.name!r}")
+                    raise ExprError(f"Undefined variable {node.name!r}")
                 val_base = bindings[node.name]
                 if node.min_rep != node.max_rep:
                     node_idx = index // suffix_cap
@@ -671,7 +667,7 @@ class MapcharGenerator:
             if index < full_c:
                 return self.get_word_at_index(expr_nodes, index), idx
             index -= full_c
-        raise ExprError("index out of bounds")
+        raise ExprError("Index out of bounds")
 
     def _stats_single(
         self,
@@ -703,7 +699,7 @@ class MapcharGenerator:
                 binding_stats[node.name] = (node_count, avg_len)
             elif isinstance(node, BindRefNode):
                 if node.name not in binding_stats:
-                    raise ExprError(f"undefined variable {node.name!r}")
+                    raise ExprError(f"Undefined variable {node.name!r}")
                 _, avg_len = binding_stats[node.name]
                 min_r, max_r = node.min_rep, node.max_rep
                 node_count = max_r - min_r + 1
@@ -813,9 +809,9 @@ class MapcharGenerator:
                 break
 
         if start_token and not start_found:
-            raise ExprError(f"word {start_token!r} is not reachable by this expression")
+            raise self._unreachable_error(start_token)
         if end_token and not end_found:
-            raise ExprError(f"word {end_token!r} is not reachable by this expression")
+            raise self._unreachable_error(end_token)
 
         if actual_count < 0:
             actual_count = 0

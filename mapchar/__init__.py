@@ -25,7 +25,6 @@ SOFTWARE.
 from .__version__ import __version__ as __version__
 
 __author__ = "Ryan R. <pwnfo@proton.me>"
-__description__ = "Generate wordlists using pattern logic and expressions."
-__name__ = "mapchar"
+__description__ = "Generate wordlists using patterns and expressions."
 __credits__ = f"Developed by {__author__}"
 __url__ = "https://github.com/pwnfo/mapchar"

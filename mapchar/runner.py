@@ -179,7 +179,7 @@ def generate(
     total_bytes, total_words = stats
 
     if options.threads > 1:
-        log.warning("Using multiple workers may result in interleaved output.")
+        log.warning("Multiple workers may interleave output.")
 
     event = threading.Event()
     progress_thread = threading.Thread(
@@ -203,7 +203,7 @@ def generate(
         """Start progress bar thread."""
         nonlocal start_time
 
-        log.info(datetime.now().strftime("[bold]Started at %H:%M on %a, %b %d %Y.[/]"))
+        log.info("Started @ %s", datetime.now().strftime("%c"))
 
         if show_progress_bar and not progress_thread.is_alive():
             progress_thread.start()
@@ -383,9 +383,9 @@ def generate(
             sys.stdout.write("\n")
             sys.stdout.flush()
 
-        log.info(
-            f"[bold]Finished in [magenta]{format_time(elapsed)}[/magenta] ({speed} W/s).[/]"
-        )
+        kw_speed = speed // 1000
+
+        log.info(f"Finished in {format_time(elapsed)} (~{kw_speed} kW/s).")
         return 0
 
     return 1

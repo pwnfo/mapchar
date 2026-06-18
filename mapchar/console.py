@@ -1,96 +1,92 @@
 from __future__ import annotations
 
+import sys
 from threading import Event
-from time import sleep
+from time import monotonic, sleep
 from typing import Any
-
-from rich.console import Console
-from rich.progress import Progress, ProgressColumn, SpinnerColumn, TextColumn
-from rich.text import Text
-from rich.theme import Theme
 
 from mapchar.utils.formatters import format_size
 
-# -------------------------------------
-# progress bar configuration constants.
-# -------------------------------------
-_PROGRESS_UPDATE_INTERVAL = 0.10
-
-_THEME = Theme(
-    {
-        "accent": "rgb(255,120,0)",
-        "accent_dim": "dim rgb(255,120,0)",
-        "accent2": "rgb(255,165,40)",
-    }
+_PROGRESS_UPDATE_INTERVAL = 0.15
+_SPINNER_FRAMES = (
+    "⠋",
+    "⠙",
+    "⠹",
+    "⠸",
+    "⠼",
+    "⠴",
+    "⠦",
+    "⠧",
+    "⠇",
+    "⠏",
 )
 
 
-class MapcharETAColumn(ProgressColumn):
-    """ETA in orange"""
+def _format_eta(seconds: float | None) -> str:
+    if seconds is None or seconds < 0:
+        return "--:--"
 
-    def render(self, task: Any) -> Text:
-        remaining = task.time_remaining
+    total = int(seconds)
+    mins, secs = divmod(total, 60)
 
-        if remaining is None:
-            return Text("--:--", style="accent2")
+    if mins >= 60:
+        hours, mins = divmod(mins, 60)
+        return f"{hours:02d}:{mins:02d}:{secs:02d}"
 
-        mins, secs = divmod(int(remaining), 60)
-        return Text(f"{mins:02d}:{secs:02d}", style="accent_dim")
+    return f"{mins:02d}:{secs:02d}"
 
 
-class SpeedColumn(ProgressColumn):
-    """Transfer speed column"""
+def _render_progress_line(
+    spinner: str,
+    current: int,
+    total: int,
+    elapsed: float,
+) -> str:
+    if total <= 0:
+        percent = 100.0
+    else:
+        percent = min((current / total) * 100.0, 100.0)
 
-    def render(self, task: Any) -> Text:
-        speed = task.speed or 0
-        return Text(f"{format_size(speed, d=2)}/s", style="accent2")
+    speed = current / elapsed if elapsed > 0 else 0.0
+    remaining = max(total - current, 0)
+    eta = (remaining / speed) if speed > 0 else None
+
+    return (
+        f"{spinner} "
+        f"[{percent:>3.0f}%] "
+        f"{format_size(current, d=2)} / {format_size(total, d=2)} @ "
+        f"{format_size(speed, d=2)}/s "
+        f"ETA {_format_eta(eta)}"
+    )
 
 
 def get_progress(e: Event, r: Any, total: int = 100) -> None:
     """Display progress in the terminal."""
-    console = Console(theme=_THEME)
+    stream = sys.stderr
+    start = monotonic()
+    frame_index = 0
 
-    with Progress(
-        SpinnerColumn(style="accent_dim", spinner_name="point"),
-        # BarColumn(bar_width=15, complete_style="accent", pulse_style="accent2"),
-        TextColumn("[accent2]{task.percentage:>3.0f}%[/]"),
-        TextColumn("[accent]{task.fields[done]} / {task.fields[total_fmt]}[/]"),
-        SpeedColumn(),
-        MapcharETAColumn(),
-        console=console,
-        transient=True,
-        expand=False,
-        refresh_per_second=10,
-    ) as progress:
-        task_id = progress.add_task(
-            "",
-            total=total,
-            done=format_size(0, d=2),
-            total_fmt=format_size(total, d=2),
-        )
+    stream.write("\033[?25l")
 
-        try:
-            while not e.is_set():
-                current = min(int(getattr(r, "value", 0)), total)
+    try:
+        while not e.is_set():
+            current = min(int(getattr(r, "value", 0)), total)
+            elapsed = monotonic() - start
+            spinner = _SPINNER_FRAMES[frame_index % len(_SPINNER_FRAMES)]
+            line = _render_progress_line(spinner, current, total, elapsed)
+            stream.write("\r\033[2K" + line)
+            stream.flush()
+            frame_index += 1
 
-                progress.update(
-                    task_id,
-                    completed=current,
-                    done=format_size(current, d=2),
-                )
+            if current >= total:
+                break
 
-                if current >= total:
-                    break
+            sleep(_PROGRESS_UPDATE_INTERVAL)
 
-                sleep(_PROGRESS_UPDATE_INTERVAL)
+    except KeyboardInterrupt:
+        e.set()
 
-        except KeyboardInterrupt:
-            e.set()
-
-        finally:
-            final_value = min(int(getattr(r, "value", 0)), total)
-            progress.update(
-                task_id,
-                completed=final_value,
-                done=format_size(final_value, d=2),
-            )
+    finally:
+        stream.write("\033[?25h")
+        stream.write("\r\033[2K")
+        stream.flush()
