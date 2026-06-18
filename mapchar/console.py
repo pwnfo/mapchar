@@ -43,7 +43,7 @@ def _render_progress_line(
     total: int,
     elapsed: float,
     width: int,
-) -> str | None:
+) -> str:
     if total <= 0:
         percent = 100.0
     else:
